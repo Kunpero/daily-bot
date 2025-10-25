@@ -38,6 +38,7 @@ public class OAuth2Config {
         http
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/", "/login", "/oauth2/**", "/error", "/h2-console/**").permitAll()
+                        .requestMatchers("/checkin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

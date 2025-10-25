@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-In Management - Daily Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .main-content {
+            padding: 2rem 0;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #4A154B 0%, #3a0f3a 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4A154B 0%, #3a0f3a 100%);
+            border: none;
+            border-radius: 8px;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3a0f3a 0%, #2a0b2a 100%);
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            border-radius: 8px;
+        }
+        .btn-warning {
+            border-radius: 8px;
+        }
+        .btn-success {
+            border-radius: 8px;
+        }
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .table thead th {
+            background: #f8f9fa;
+            border: none;
+            font-weight: 600;
+        }
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .badge {
+            font-size: 0.75rem;
+        }
+        .message-preview {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .pagination {
+            justify-content: center;
+        }
+        .page-link {
+            border-radius: 8px;
+            margin: 0 2px;
+            border: 1px solid #dee2e6;
+        }
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, #4A154B 0%, #3a0f3a 100%);
+            border-color: #4A154B;
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #4A154B;
+            box-shadow: 0 0 0 0.2rem rgba(74, 21, 75, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fab fa-slack me-2"></i>
+                Daily Bot
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-home me-1"></i>
+                    Dashboard
+                </a>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <!-- Success/Error Messages -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">
+                                <i class="fas fa-clipboard-list me-2"></i>
+                                Check-In Management
+                            </h4>
+                            <a href="/checkin/create" class="btn btn-light">
+                                <i class="fas fa-plus me-1"></i>
+                                Create New Check-In
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get" action="/checkin" class="row g-3">
+                            <div class="col-md-3">
+                                <label for="owner" class="form-label">Owner</label>
+                                <input type="text" class="form-control" id="owner" name="owner" 
+                                       th:value="${owner}" placeholder="Filter by owner">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="search" class="form-label">Search</label>
+                                <input type="text" class="form-control" id="search" name="search" 
+                                       th:value="${search}" placeholder="Search in messages">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="sortBy" class="form-label">Sort By</label>
+                                <select class="form-select" id="sortBy" name="sortBy">
+                                    <option value="createdAt" th:selected="${sortBy == 'createdAt'}">Created Date</option>
+                                    <option value="updatedAt" th:selected="${sortBy == 'updatedAt'}">Updated Date</option>
+                                    <option value="owner" th:selected="${sortBy == 'owner'}">Owner</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="sortDir" class="form-label">Direction</label>
+                                <select class="form-select" id="sortDir" name="sortDir">
+                                    <option value="desc" th:selected="${sortDir == 'desc'}">Descending</option>
+                                    <option value="asc" th:selected="${sortDir == 'asc'}">Ascending</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i>
+                                        Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Check-Ins Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Owner</th>
+                                        <th>Intro Message</th>
+                                        <th>Outro Message</th>
+                                        <th>Created</th>
+                                        <th>Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="checkIn : ${checkInPage.content}">
+                                        <td th:text="${checkIn.uuid}"></td>
+                                        <td>
+                                            <strong th:text="${checkIn.name}">Check-In Name</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary" th:text="${checkIn.owner}"></span>
+                                        </td>
+                                        <td>
+                                            <div class="message-preview" th:if="${checkIn.introMessage}">
+                                                <i class="fas fa-comment me-1 text-success"></i>
+                                                <span th:text="${checkIn.introMessage}"></span>
+                                            </div>
+                                            <span th:unless="${checkIn.introMessage}" class="text-muted">
+                                                <i class="fas fa-minus me-1"></i>
+                                                No intro message
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="message-preview" th:if="${checkIn.outroMessage}">
+                                                <i class="fas fa-comment me-1 text-success"></i>
+                                                <span th:text="${checkIn.outroMessage}"></span>
+                                            </div>
+                                            <span th:unless="${checkIn.outroMessage}" class="text-muted">
+                                                <i class="fas fa-minus me-1"></i>
+                                                No outro message
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small th:text="${#temporals.format(checkIn.creationDate, 'yyyy-MM-dd HH:mm')}"></small>
+                                        </td>
+                                        <td>
+                                            <small th:text="${#temporals.format(checkIn.lastUpdateDate, 'yyyy-MM-dd HH:mm')}"></small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a th:href="@{/checkin/{uuid}(uuid=${checkIn.uuid})}"
+                                                   class="btn btn-sm btn-outline-primary" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a th:href="@{/checkin/{uuid}/edit(uuid=${checkIn.uuid})}"
+                                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        title="Delete"
+                                                        th:data-uuid="${checkIn.uuid}"
+                                                        th:onclick="confirmDelete(this.getAttribute('data-uuid'))">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(checkInPage.content)}">
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                                            <br>
+                                            No check-ins found
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav th:if="${checkInPage.totalPages > 1}" aria-label="Check-in pagination">
+                            <ul class="pagination">
+                                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/checkin(page=${currentPage - 1}, size=${checkInPage.size}, sortBy=${sortBy}, sortDir=${sortDir}, owner=${owner}, search=${search})}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item" th:each="i : ${#numbers.sequence(0, checkInPage.totalPages - 1)}" 
+                                    th:classappend="${i == currentPage} ? 'active'">
+                                    <a class="page-link" th:href="@{/checkin(page=${i}, size=${checkInPage.size}, sortBy=${sortBy}, sortDir=${sortDir}, owner=${owner}, search=${search})}"
+                                       th:text="${i + 1}"></a>
+                                </li>
+                                <li class="page-item" th:classappend="${currentPage == checkInPage.totalPages - 1} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/checkin(page=${currentPage + 1}, size=${checkInPage.size}, sortBy=${sortBy}, sortDir=${sortDir}, owner=${owner}, search=${search})}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+
+                        <!-- Statistics -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-chart-bar me-2"></i>
+                                            Statistics
+                                        </h6>
+                                        <div class="row text-center">
+                                            <div class="col-md-3">
+                                                <div class="h4 text-primary" th:text="${checkInPage.totalElements}">0</div>
+                                                <small class="text-muted">Total Check-ins</small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="h4 text-success" th:text="${checkInPage.totalPages}">0</div>
+                                                <small class="text-muted">Total Pages</small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="h4 text-info" th:text="${checkInPage.size}">0</div>
+                                                <small class="text-muted">Per Page</small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="h4 text-warning" th:text="${currentPage + 1}">0</div>
+                                                <small class="text-muted">Current Page</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this check-in? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteForm" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmDelete(checkInId) {
+            document.getElementById('deleteForm').action = '/checkin/' + checkInId + '/delete';
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
+</body>
+</html>
