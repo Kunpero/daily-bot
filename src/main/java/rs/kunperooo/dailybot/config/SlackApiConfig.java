@@ -1,0 +1,30 @@
+package rs.kunperooo.dailybot.config;
+
+import com.slack.api.Slack;
+import com.slack.api.SlackConfig;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@Slf4j
+public class SlackApiConfig {
+
+    @Value("${slack.api.timeout:30000}")
+    private int apiTimeout;
+
+    @Value("${slack.api.retry.attempts:3}")
+    private int retryAttempts;
+
+    @Bean
+    public Slack slackClient() {
+        log.info("Configuring Slack API client with timeout: {}ms, retry attempts: {}",
+                apiTimeout, retryAttempts);
+
+        SlackConfig config = new SlackConfig();
+        config.setHttpClientReadTimeoutMillis(apiTimeout);
+        config.setHttpClientWriteTimeoutMillis(apiTimeout);
+        return Slack.getInstance(config);
+    }
+}
