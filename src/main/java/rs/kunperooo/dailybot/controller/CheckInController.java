@@ -21,6 +21,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import rs.kunperooo.dailybot.controller.dto.CheckInFormData;
 import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
 import rs.kunperooo.dailybot.service.CheckInService;
+import rs.kunperooo.dailybot.service.SlackApiService;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +34,7 @@ import java.util.UUID;
 public class CheckInController {
 
     private final CheckInService checkInService;
+    private final SlackApiService slackApiService;
 
     @GetMapping
     public String listCheckIns(
@@ -90,7 +92,6 @@ public class CheckInController {
         log.debug("Showing create check-in form");
 
         CheckInFormData checkInForm = CheckInFormData.builder()
-                .questions(List.of())
                 .build();
 
         model.addAttribute("checkInForm", checkInForm);

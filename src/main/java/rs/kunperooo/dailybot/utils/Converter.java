@@ -1,8 +1,5 @@
 package rs.kunperooo.dailybot.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.Page;
 import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
 import rs.kunperooo.dailybot.controller.dto.QuestionDto;
@@ -40,10 +37,10 @@ public class Converter {
     }
 
     public static List<QuestionDto> convertQuestions(List<CheckInQuestionEntity> questions) {
-       return questions.stream()
-               .map(Converter::convert)
-               .sorted(Comparator.comparing(QuestionDto::getOrder))
-               .toList();
+        return questions.stream()
+                .map(Converter::convert)
+                .sorted(Comparator.comparing(QuestionDto::getOrder))
+                .toList();
     }
 
     public static QuestionDto convert(CheckInQuestionEntity question) {

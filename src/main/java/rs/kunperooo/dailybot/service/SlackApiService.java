@@ -32,7 +32,7 @@ public class SlackApiService {
      * @throws SlackApiException if Slack API returns an error
      * @throws IOException       if there's a network error
      */
-    public/**/ List<SlackUserDto> getActiveUsers() throws SlackApiException, IOException {
+    public List<SlackUserDto> getActiveUsers() throws SlackApiException, IOException {
         log.info("Retrieving active users from Slack workspace");
 
         List<User> allUsers = getAllUsers();
