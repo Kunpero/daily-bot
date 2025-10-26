@@ -1,5 +1,6 @@
 package rs.kunperooo.dailybot.service;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -7,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
+import rs.kunperooo.dailybot.controller.dto.QuestionDto;
 import rs.kunperooo.dailybot.entity.CheckInEntity;
 import rs.kunperooo.dailybot.repository.CheckInRepository;
 
@@ -16,6 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static rs.kunperooo.dailybot.utils.Converter.convert;
+import static rs.kunperooo.dailybot.utils.Converter.convertCheckIns;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +28,9 @@ public class RelationalDbCheckInService implements CheckInService {
 
     private final CheckInRepository checkInRepository;
 
-    public void createCheckIn(String owner, String name, String introMessage, String outroMessage) {
-        log.info("Creating new check-in for owner: {} with name: {}", owner, name);
+    public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions) {
+        log.info("Creating new check-in for owner: {} with name: {} and {} questions", 
+                owner, name, questions);
 
         CheckInEntity checkIn = CheckInEntity.builder()
                 .uuid(java.util.UUID.randomUUID())
@@ -34,6 +38,7 @@ public class RelationalDbCheckInService implements CheckInService {
                 .name(name)
                 .introMessage(introMessage)
                 .outroMessage(outroMessage)
+                .checkInQuestions(convert(questions))
                 .creationDate(LocalDateTime.now())
                 .lastUpdateDate(LocalDateTime.now())
                 .build();
@@ -45,13 +50,13 @@ public class RelationalDbCheckInService implements CheckInService {
     @Transactional(readOnly = true)
     public List<CheckInRestData> findByOwner(String owner) {
         log.debug("Finding all check-ins for owner: {}", owner);
-        return convert(checkInRepository.findByOwner(owner));
+        return convertCheckIns(checkInRepository.findByOwner(owner));
     }
 
     @Transactional(readOnly = true)
     public List<CheckInRestData> findAll() {
         log.debug("Finding all check-ins");
-        return convert(checkInRepository.findAll());
+        return convertCheckIns(checkInRepository.findAll());
     }
 
     @Transactional(readOnly = true)
@@ -66,8 +71,9 @@ public class RelationalDbCheckInService implements CheckInService {
         return convert(checkInRepository.findByOwner(owner, pageable));
     }
 
-    public void updateCheckInMessages(UUID uuid, String owner, String name, String introMessage, String outroMessage) {
-        log.info("Updating check-in for ID: {} and owner: {} with name: {}", uuid, owner, name);
+    public void updateCheckInMessages(UUID uuid, String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions) {
+        log.info("Updating check-in for ID: {} and owner: {} with name: {} and {} questions", 
+                uuid, owner, name, questions);
 
         CheckInEntity checkIn = checkInRepository.findByUuidAndOwner(uuid, owner)
                 .orElseThrow(() -> new RuntimeException("Check-in not found with ID: " + uuid + " for owner: " + owner));
@@ -75,6 +81,7 @@ public class RelationalDbCheckInService implements CheckInService {
         checkIn.setName(name);
         checkIn.setIntroMessage(introMessage);
         checkIn.setOutroMessage(outroMessage);
+        checkIn.setCheckInQuestions(convert(questions));
         checkIn.setLastUpdateDate(LocalDateTime.now());
 
         checkInRepository.save(checkIn);

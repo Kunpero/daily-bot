@@ -63,6 +63,91 @@
         .character-count.danger {
             color: #dc3545;
         }
+        .question-item {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .question-item:hover {
+            border-color: #4A154B;
+            background: #f0f0f0;
+        }
+        .question-item.sortable-ghost {
+            opacity: 0.4;
+        }
+        .question-item.sortable-chosen {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .question-handle {
+            cursor: grab;
+            color: #6c757d;
+            font-size: 1.2rem;
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .question-handle:active {
+            cursor: grabbing;
+        }
+        .question-content {
+            margin-left: 30px;
+        }
+        .question-actions {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .question-item:hover .question-actions {
+            opacity: 1;
+        }
+        .questions-container {
+            min-height: 200px;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 1rem;
+            background: #fafafa;
+        }
+        .questions-container.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+        .question-number {
+            background: #4A154B;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .question-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .auto-add-indicator {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 5px;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #1976d2;
+        }
     </style>
 </head>
 <body>
@@ -87,7 +172,7 @@
 
     <div class="container main-content">
         <div class="row justify-content-center">
-            <div class="col-lg-8">
+            <div class="col-lg-10">
                 <!-- Success/Error Messages -->
                 <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle me-2"></i>
@@ -110,8 +195,8 @@
                         </h4>
                     </div>
                     <div class="card-body">
-                        <form th:action="${isEdit} ? @{/checkin/{uuid}/edit(uuid=${checkIn.uuid})} : @{/checkin/create}"
-                              th:object="${checkIn}" method="post">
+                        <form th:action="${isEdit} ? @{/checkin/{uuid}/edit(uuid=${checkInForm.uuid})} : @{/checkin/create}"
+                              th:object="${checkInForm}" method="post" id="checkinForm">
                             
                             <!-- Name Field -->
                             <div class="mb-4">
@@ -122,9 +207,9 @@
                                 <input type="text" class="form-control" id="name" name="name" 
                                        th:field="*{name}" 
                                        placeholder="Enter a name for this check-in session..."
-                                       maxlength="100" required>
+                                       maxlength="255" required>
                                 <div class="character-count mt-1">
-                                    <span id="nameCount">0</span>/100 characters
+                                    <span id="nameCount">0</span>/255 characters
                                 </div>
                             </div>
                             
@@ -140,6 +225,32 @@
                                           maxlength="1000"></textarea>
                                 <div class="character-count mt-1">
                                     <span id="introCount">0</span>/1000 characters
+                                </div>
+                            </div>
+
+                            <!-- Questions Section -->
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <label class="form-label mb-0">
+                                        <i class="fas fa-question-circle me-1"></i>
+                                        Questions
+                                    </label>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="addQuestionBtn">
+                                        <i class="fas fa-plus me-1"></i>
+                                        Add Question
+                                    </button>
+                                </div>
+                                
+                                <div class="auto-add-indicator">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    <strong>Auto-add feature:</strong> Start typing in the last question to automatically add a new one!
+                                </div>
+                                
+                                <div class="questions-container" id="questionsContainer">
+                                    <div class="text-center text-muted py-4" id="emptyQuestionsMessage">
+                                        <i class="fas fa-question-circle fa-2x mb-2"></i>
+                                        <p class="mb-0">No questions added yet. Start typing to add your first question!</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -164,10 +275,10 @@
                                 <strong>Tips:</strong>
                                 <ul class="mb-0 mt-2">
                                     <li><strong>Name is required</strong> - Choose a descriptive name for your check-in session</li>
+                                    <li><strong>Questions are optional</strong> - Add questions to gather specific information from participants</li>
+                                    <li>Drag and drop questions to reorder them using the ☰ handle</li>
+                                    <li>Start typing in the last question to automatically add a new one</li>
                                     <li>Both intro and outro messages are optional</li>
-                                    <li>Use intro messages to welcome participants and set expectations</li>
-                                    <li>Use outro messages to thank participants and provide next steps</li>
-                                    <li>Messages support basic formatting and can include emojis</li>
                                 </ul>
                             </div>
 
@@ -198,7 +309,7 @@
                         <div id="previewContent">
                             <div class="text-muted text-center">
                                 <i class="fas fa-eye-slash fa-2x mb-2"></i>
-                                <p>Start typing to see a preview of your check-in messages</p>
+                                <p>Start typing to see a preview of your check-in</p>
                             </div>
                         </div>
                     </div>
@@ -208,9 +319,21 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
+        let questionCounter = 0;
+        let sortable;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharacterCounts();
+            initializeQuestions();
+            initializePreview();
+            initializeSortable();
+        });
+
         // Character count functionality
-        function updateCharacterCount(textareaId, countId) {
+        function updateCharacterCount(textareaId, countId, maxLength) {
             const textarea = document.getElementById(textareaId);
             const countElement = document.getElementById(countId);
             
@@ -218,17 +341,157 @@
                 const count = textarea.value.length;
                 countElement.textContent = count;
                 
-                // Update color based on count
                 countElement.className = 'character-count mt-1';
-                if (count > 800) {
+                if (count > maxLength * 0.9) {
                     countElement.classList.add('danger');
-                } else if (count > 600) {
+                } else if (count > maxLength * 0.7) {
                     countElement.classList.add('warning');
                 }
             }
             
             textarea.addEventListener('input', updateCount);
-            updateCount(); // Initial count
+            updateCount();
+        }
+
+        function initializeCharacterCounts() {
+            updateCharacterCount('name', 'nameCount', 255);
+            updateCharacterCount('introMessage', 'introCount', 1000);
+            updateCharacterCount('outroMessage', 'outroCount', 1000);
+        }
+
+        // Question management
+        function initializeQuestions() {
+            // Load existing questions from form data
+            const existingQuestions = /*[[${checkInForm.questions}]]*/ [];
+            if (existingQuestions && existingQuestions.length > 0) {
+                existingQuestions.forEach(question => {
+                    addQuestion(question);
+                });
+            } else {
+                // Start with one empty question
+                addQuestion();
+            }
+
+            // Add question button
+            document.getElementById('addQuestionBtn').addEventListener('click', function() {
+                addQuestion();
+            });
+        }
+
+        function addQuestion(questionData = null) {
+            const container = document.getElementById('questionsContainer');
+            const questionId = questionData ? questionData.uuid : generateUUID();
+            const questionNumber = container.querySelectorAll('.question-item').length + 1;
+            
+            const questionHtml = `
+                <div class="question-item" data-question-id="${questionId}">
+                    <i class="fas fa-grip-vertical question-handle"></i>
+                    <div class="question-actions">
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-question">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="question-content">
+                        <div class="question-header">
+                            <div class="question-number">${questionNumber}</div>
+                            <div class="flex-grow-1">
+                                <input type="text" class="form-control question-text" 
+                                       placeholder="Enter your question..." 
+                                       maxlength="500" 
+                                       value="${questionData ? questionData.text || '' : ''}">
+                                <div class="character-count mt-1">
+                                    <span class="question-text-count">0</span>/500 characters
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', questionHtml);
+            
+            // Add event listeners to the new question
+            const newQuestion = container.lastElementChild;
+            const questionText = newQuestion.querySelector('.question-text');
+            const questionTextCount = newQuestion.querySelector('.question-text-count');
+            
+            // Character count for question text
+            questionText.addEventListener('input', function() {
+                const count = this.value.length;
+                questionTextCount.textContent = count;
+                questionTextCount.className = 'character-count mt-1';
+                if (count > 450) {
+                    questionTextCount.classList.add('danger');
+                } else if (count > 350) {
+                    questionTextCount.classList.add('warning');
+                }
+                
+                // Auto-add new question when typing in the last question
+                if (isLastQuestion(newQuestion) && this.value.trim().length > 0) {
+                    setTimeout(() => {
+                        if (isLastQuestion(newQuestion) && this.value.trim().length > 0) {
+                            addQuestion();
+                        }
+                    }, 500);
+                }
+                
+                updatePreview();
+            });
+
+            // Remove button
+            newQuestion.querySelector('.remove-question').addEventListener('click', function() {
+                newQuestion.remove();
+                updateQuestionNumbers();
+                updatePreview();
+                updateQuestionsContainer();
+            });
+
+            updateQuestionsContainer();
+            updatePreview();
+        }
+
+        function isLastQuestion(questionElement) {
+            const container = document.getElementById('questionsContainer');
+            const questions = container.querySelectorAll('.question-item');
+            return questions.length > 0 && questions[questions.length - 1] === questionElement;
+        }
+
+        function updateQuestionNumbers() {
+            const container = document.getElementById('questionsContainer');
+            const questions = container.querySelectorAll('.question-item');
+            questions.forEach((question, index) => {
+                const numberElement = question.querySelector('.question-number');
+                if (numberElement) {
+                    numberElement.textContent = index + 1;
+                }
+            });
+        }
+
+        function updateQuestionsContainer() {
+            const container = document.getElementById('questionsContainer');
+            const questions = container.querySelectorAll('.question-item');
+            const emptyMessage = document.getElementById('emptyQuestionsMessage');
+            
+            if (questions.length === 0) {
+                emptyMessage.style.display = 'block';
+            } else {
+                emptyMessage.style.display = 'none';
+            }
+        }
+
+        // Sortable functionality
+        function initializeSortable() {
+            const container = document.getElementById('questionsContainer');
+            sortable = new Sortable(container, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                handle: '.question-handle',
+                onEnd: function(evt) {
+                    updateQuestionNumbers();
+                    updatePreview();
+                }
+            });
         }
 
         // Live preview functionality
@@ -274,6 +537,35 @@
                     </div>
                 `;
             }
+
+            // Questions preview
+            const questions = document.querySelectorAll('.question-item');
+            if (questions.length > 0) {
+                previewHtml += `
+                    <div class="mb-3">
+                        <h6 class="text-info">
+                            <i class="fas fa-question-circle me-1"></i>
+                            Questions (${questions.length})
+                        </h6>
+                `;
+                
+                questions.forEach((question, index) => {
+                    const text = question.querySelector('.question-text').value;
+                    
+                    if (text.trim()) {
+                        previewHtml += `
+                            <div class="bg-light p-3 rounded mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="question-number me-2">${index + 1}</div>
+                                    <div><strong>${text}</strong></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                previewHtml += '</div>';
+            }
             
             if (outroMessage) {
                 previewHtml += `
@@ -293,18 +585,51 @@
             previewContent.innerHTML = previewHtml;
         }
 
-        // Initialize character counts
-        updateCharacterCount('name', 'nameCount');
-        updateCharacterCount('introMessage', 'introCount');
-        updateCharacterCount('outroMessage', 'outroCount');
+        // Form submission
+        document.getElementById('checkinForm').addEventListener('submit', function(e) {
+            // Collect questions data
+            const questions = [];
+            const questionItems = document.querySelectorAll('.question-item');
+            
+            questionItems.forEach((item, index) => {
+                const text = item.querySelector('.question-text').value.trim();
+                if (text) {
+                    questions.push({
+                        uuid: item.dataset.questionId,
+                        text: text,
+                        order: index + 1
+                    });
+                }
+            });
+
+            // Add hidden inputs for questions
+            questions.forEach((question, index) => {
+                const questionPrefix = `questions[${index}]`;
+                
+                addHiddenInput(questionPrefix + '.uuid', question.uuid);
+                addHiddenInput(questionPrefix + '.text', question.text);
+                addHiddenInput(questionPrefix + '.order', question.order);
+            });
+        });
+
+        function addHiddenInput(name, value) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            document.getElementById('checkinForm').appendChild(input);
+        }
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
 
         // Initialize preview
         updatePreview();
-
-        // Add event listeners for live preview
-        document.getElementById('name').addEventListener('input', updatePreview);
-        document.getElementById('introMessage').addEventListener('input', updatePreview);
-        document.getElementById('outroMessage').addEventListener('input', updatePreview);
     </script>
 </body>
 </html>

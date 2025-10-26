@@ -219,6 +219,10 @@
                                             <span class="badge bg-primary" th:text="${checkIn.owner}"></span>
                                         </td>
                                         <td>
+                                            <span class="badge bg-info" th:text="${checkIn.questions != null ? checkIn.questions.size() : 0}">0</span>
+                                            <span class="text-muted ms-1">questions</span>
+                                        </td>
+                                        <td>
                                             <div class="message-preview" th:if="${checkIn.introMessage}">
                                                 <i class="fas fa-comment me-1 text-success"></i>
                                                 <span th:text="${checkIn.introMessage}"></span>

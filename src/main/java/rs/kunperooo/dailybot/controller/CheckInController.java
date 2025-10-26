@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import rs.kunperooo.dailybot.controller.dto.CheckInFormData;
 import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
-import rs.kunperooo.dailybot.entity.CheckInEntity;
 import rs.kunperooo.dailybot.service.CheckInService;
 
 import java.util.List;
@@ -78,10 +78,10 @@ public class CheckInController {
     public String viewCheckIn(@PathVariable UUID uuid, Model model) {
         log.debug("Viewing check-in with ID: {}", uuid);
 
-        CheckInRestData checkIn = checkInService.findByUuid(uuid)
+        CheckInRestData checkInForm = checkInService.findByUuid(uuid)
                 .orElseThrow(() -> new RuntimeException("Check-in not found with ID: " + uuid));
 
-        model.addAttribute("checkIn", checkIn);
+        model.addAttribute("checkInForm", checkInForm);
         return "checkin-detail";
     }
 
@@ -89,7 +89,11 @@ public class CheckInController {
     public String showCreateForm(Model model) {
         log.debug("Showing create check-in form");
 
-        model.addAttribute("checkIn", new CheckInEntity());
+        CheckInFormData checkInForm = CheckInFormData.builder()
+                .questions(List.of())
+                .build();
+
+        model.addAttribute("checkInForm", checkInForm);
         model.addAttribute("isEdit", false);
         return "checkin-form";
     }
@@ -98,28 +102,31 @@ public class CheckInController {
     public String showEditForm(@PathVariable UUID uuid, Model model) {
         log.debug("Showing edit form for check-in ID: {}", uuid);
 
-        CheckInRestData checkIn = checkInService.findByUuid(uuid)
+        CheckInRestData checkInForm = checkInService.findByUuid(uuid)
                 .orElseThrow(() -> new RuntimeException("Check-in not found with ID: " + uuid));
 
-        model.addAttribute("checkIn", checkIn);
+        model.addAttribute("checkInForm", checkInForm);
         model.addAttribute("isEdit", true);
         return "checkin-form";
     }
 
     @PostMapping("/create")
     public String createCheckIn(
-            @ModelAttribute CheckInEntity checkIn,
+            @ModelAttribute CheckInFormData checkInForm,
             @AuthenticationPrincipal OidcUser principal,
             RedirectAttributes redirectAttributes) {
 
-        log.info("Creating new check-in for owner: {}", principal.getSubject());
+        log.info("Creating new check-in for owner: {} with {} questions",
+                principal.getSubject(),
+                checkInForm.getQuestions() != null ? checkInForm.getQuestions().size() : 0);
 
         try {
             checkInService.createCheckIn(
                     principal.getSubject(),
-                    checkIn.getName(),
-                    checkIn.getIntroMessage(),
-                    checkIn.getOutroMessage()
+                    checkInForm.getName(),
+                    checkInForm.getIntroMessage(),
+                    checkInForm.getOutroMessage(),
+                    checkInForm.getQuestions()
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Check-in created successfully!");
@@ -134,19 +141,23 @@ public class CheckInController {
     @PostMapping("/{uuid}/edit")
     public String updateCheckIn(
             @PathVariable UUID uuid,
-            @ModelAttribute CheckInEntity checkIn,
+            @ModelAttribute CheckInFormData checkInForm,
             @AuthenticationPrincipal OidcUser principal,
             RedirectAttributes redirectAttributes) {
 
-        log.info("Updating check-in ID: {} for owner: {}", uuid, principal.getSubject());
+        log.info("Updating check-in ID: {} for owner: {} with {} questions",
+                uuid,
+                principal.getSubject(),
+                checkInForm.getQuestions() != null ? checkInForm.getQuestions().size() : 0);
 
         try {
             checkInService.updateCheckInMessages(
                     uuid,
                     principal.getSubject(),
-                    checkIn.getName(),
-                    checkIn.getIntroMessage(),
-                    checkIn.getOutroMessage()
+                    checkInForm.getName(),
+                    checkInForm.getIntroMessage(),
+                    checkInForm.getOutroMessage(),
+                    checkInForm.getQuestions()
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Check-in updated successfully!");

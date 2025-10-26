@@ -1,10 +1,12 @@
 package rs.kunperooo.dailybot.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,11 +16,10 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
-/**
- * CheckIn entity representing check-in sessions
- */
 @Entity
 @Table(name = "check_in")
 @Data
@@ -53,4 +54,7 @@ public class CheckInEntity {
 
     @Column(name = "outro_message", columnDefinition = "TEXT")
     private String outroMessage;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<CheckInQuestionEntity> checkInQuestions = new LinkedList<>();
 }
