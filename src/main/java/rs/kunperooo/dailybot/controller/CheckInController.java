@@ -152,7 +152,7 @@ public class CheckInController {
                 checkInForm.getQuestions() != null ? checkInForm.getQuestions().size() : 0);
 
         try {
-            checkInService.updateCheckInMessages(
+            checkInService.updateCheckIn(
                     uuid,
                     principal.getSubject(),
                     checkInForm.getName(),

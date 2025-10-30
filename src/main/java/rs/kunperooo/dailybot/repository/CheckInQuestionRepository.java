@@ -1,0 +1,12 @@
+package rs.kunperooo.dailybot.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import rs.kunperooo.dailybot.entity.CheckInQuestionEntity;
+
+import java.util.List;
+
+@Repository
+public interface CheckInQuestionRepository extends JpaRepository<CheckInQuestionEntity, Long> {
+    List<CheckInQuestionEntity> getAllByCheckInIdAndIsActiveTrue(Long checkInId);
+}

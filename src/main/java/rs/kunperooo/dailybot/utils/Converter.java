@@ -69,6 +69,6 @@ public class Converter {
         }
         return questions.stream()
                 .map(Converter::convert)
-                .toList();
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
     }
 }

@@ -5,10 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -22,7 +19,7 @@ public class CheckInFormData {
 
     private String outroMessage;
 
-    private List<QuestionDto> questions = new LinkedList<>();
+    private List<QuestionDto> questions;
 
-    private List<MemberDto> members = new ArrayList<>();
+    private List<MemberDto> members;
 }

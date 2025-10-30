@@ -10,9 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
 import rs.kunperooo.dailybot.controller.dto.QuestionDto;
 import rs.kunperooo.dailybot.entity.CheckInEntity;
+import rs.kunperooo.dailybot.entity.CheckInQuestionEntity;
+import rs.kunperooo.dailybot.repository.CheckInQuestionRepository;
 import rs.kunperooo.dailybot.repository.CheckInRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,9 +31,10 @@ import static rs.kunperooo.dailybot.utils.Converter.convertCheckIns;
 public class RelationalDbCheckInService implements CheckInService {
 
     private final CheckInRepository checkInRepository;
+    private final CheckInQuestionRepository checkInQuestionRepository;
 
     public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions) {
-        log.info("Creating new check-in for owner: {} with name: {} and {} questions", 
+        log.info("Creating new check-in for owner: {} with name: {} and {} questions",
                 owner, name, questions);
 
         CheckInEntity checkIn = CheckInEntity.builder()
@@ -38,10 +43,12 @@ public class RelationalDbCheckInService implements CheckInService {
                 .name(name)
                 .introMessage(introMessage)
                 .outroMessage(outroMessage)
-                .checkInQuestions(convert(questions))
                 .creationDate(LocalDateTime.now())
                 .lastUpdateDate(LocalDateTime.now())
                 .build();
+        for (CheckInQuestionEntity question : convert(questions)) {
+            checkIn.addQuestion(question);
+        }
 
         CheckInEntity savedCheckIn = checkInRepository.save(checkIn);
         log.info("Check-in created successfully with ID: {}", savedCheckIn.getId());
@@ -62,7 +69,13 @@ public class RelationalDbCheckInService implements CheckInService {
     @Transactional(readOnly = true)
     public Optional<CheckInRestData> findByUuid(UUID uuid) {
         log.debug("Finding check-in by ID: {}", uuid);
-        return convert(checkInRepository.findByUuid(uuid));
+        Optional<CheckInEntity> checkIn = checkInRepository.findByUuid(uuid);
+        List<CheckInQuestionEntity> activeQuestions;
+        if (checkIn.isPresent()) {
+            activeQuestions = checkInQuestionRepository.getAllByCheckInIdAndIsActiveTrue(checkIn.get().getId());
+            checkIn.get().setCheckInQuestions(activeQuestions);
+        }
+        return convert(checkIn);
     }
 
     @Transactional(readOnly = true)
@@ -71,8 +84,8 @@ public class RelationalDbCheckInService implements CheckInService {
         return convert(checkInRepository.findByOwner(owner, pageable));
     }
 
-    public void updateCheckInMessages(UUID uuid, String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions) {
-        log.info("Updating check-in for ID: {} and owner: {} with name: {} and {} questions", 
+    public void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions) {
+        log.info("Updating check-in for ID: {} and owner: {} with name: {} and {} questions",
                 uuid, owner, name, questions);
 
         CheckInEntity checkIn = checkInRepository.findByUuidAndOwner(uuid, owner)
@@ -81,7 +94,28 @@ public class RelationalDbCheckInService implements CheckInService {
         checkIn.setName(name);
         checkIn.setIntroMessage(introMessage);
         checkIn.setOutroMessage(outroMessage);
-        checkIn.setCheckInQuestions(convert(questions));
+
+        List<UUID> uuids = questions.stream().map(QuestionDto::getUuid).toList();
+        List<CheckInQuestionEntity> deactivatedQuestions = checkIn.getCheckInQuestions().stream()
+                .filter(q -> !uuids.contains(q.getUuid()))
+                .peek(q -> q.setActive(false))
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        List<CheckInQuestionEntity> updatedQuestions = questions.stream()
+                .map(q1 -> {
+                    CheckInQuestionEntity currentQuestion = checkIn.getCheckInQuestions().stream().filter(q2 -> q1.getUuid().equals(q2.getUuid())).findFirst().orElse(null);
+                    return CheckInQuestionEntity.builder()
+                            .id(currentQuestion.getId())
+                            .checkIn(checkIn)
+                            .uuid(q1.getUuid())
+                            .orderNumber(q1.getOrder())
+                            .question(q1.getText())
+                            .build();
+                })
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+
+        updatedQuestions.addAll(deactivatedQuestions);
+
+        checkIn.setCheckInQuestions(updatedQuestions);
         checkIn.setLastUpdateDate(LocalDateTime.now());
 
         checkInRepository.save(checkIn);
