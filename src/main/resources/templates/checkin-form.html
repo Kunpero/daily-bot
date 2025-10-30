@@ -252,20 +252,23 @@
                                 </div>
                             </div>
 
-                            <!-- Members (Slack users) Multi-select -->
+                            <!-- Members (Slack users) Multi-select (required) -->
                             <div class="mb-4">
                                 <label class="form-label">
                                     <i class="fas fa-users me-1"></i>
-                                    Select Members
+                                    Select Members <span class="text-danger">*</span>
                                 </label>
                                 <select class="form-select" id="membersSelect" multiple>
                                     <option th:each="user : ${activeUsers != null ? activeUsers : slackUsers}"
                                             th:value="${user.id}"
                                             th:data-real-name="${user.realName}"
-                                            th:data-image-url="${user.profileImage24}"
+                                            th:data-image-url="${user.profileImage24 != null ? user.profileImage24 : user.profileImage24}"
                                             th:text="${user.realName}">
                                     </option>
                                 </select>
+                                <div id="membersSelectFeedback" class="invalid-feedback d-block" style="display:none;">
+                                    Please select at least one member.
+                                </div>
                                 <div th:if="${activeUsers == null and (slackUsers == null or slackUsers.isEmpty())}" class="text-muted small mt-2">
                                     No active Slack users available.
                                 </div>
@@ -700,15 +703,36 @@
                 addHiddenInput(questionPrefix + '.order', question.order);
             });
 
-            // Add hidden inputs for members (from Select2)
-            const selectedMembers = window.jQuery ? jQuery('#membersSelect').select2('data') : [];
+            // Add hidden inputs for members (from Select2) - required
+            const $sel = window.jQuery ? jQuery('#membersSelect') : null;
+            const selectedMembers = $sel ? $sel.select2('data') : [];
+
+            // Validate non-empty members
+            const feedback = document.getElementById('membersSelectFeedback');
+            const select2Container = document.querySelector('#membersSelect ~ .select2');
+            if (!selectedMembers || selectedMembers.length === 0) {
+                if (feedback) feedback.style.display = 'block';
+                if (select2Container) select2Container.classList.add('is-invalid');
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            } else {
+                if (feedback) feedback.style.display = 'none';
+                if (select2Container) select2Container.classList.remove('is-invalid');
+            }
             // Clear previously added member inputs if any
             document.querySelectorAll('#checkinForm input[name^="members["]').forEach(n => n.remove());
             selectedMembers.forEach((m, idx) => {
                 if (!m.id) return;
-                const realName = (window.jQuery && m.element) ? jQuery(m.element).data('real-name') || m.text : m.text;
+                const el = (window.jQuery && m.element) ? jQuery(m.element) : null;
+                const realName = el ? el.data('real-name') || m.text : m.text;
+                const imageUrl = el ? el.data('image-url') || '' : '';
+                const username = m.id; // username is the id value
+                
                 addHiddenInput(`members[${idx}].id`, m.id);
                 addHiddenInput(`members[${idx}].realName`, realName);
+                addHiddenInput(`members[${idx}].username`, username);
+                addHiddenInput(`members[${idx}].imageUrl`, imageUrl);
             });
         });
 
