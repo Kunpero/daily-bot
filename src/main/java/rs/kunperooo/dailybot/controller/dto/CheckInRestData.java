@@ -25,4 +25,6 @@ public class CheckInRestData {
     private String outroMessage;
 
     private List<QuestionDto> questions;
+
+    private List<MemberDto> members;
 }

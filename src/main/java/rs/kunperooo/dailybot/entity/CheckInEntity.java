@@ -2,6 +2,7 @@ package rs.kunperooo.dailybot.entity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -16,6 +17,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import rs.kunperooo.dailybot.utils.MemberListJsonConverter;
 
 import java.time.LocalDateTime;
 import java.util.LinkedList;
@@ -61,6 +63,11 @@ public class CheckInEntity {
     @Builder.Default
     @OrderBy("orderNumber")
     private List<CheckInQuestionEntity> checkInQuestions = new LinkedList<>();
+
+    @Column(name = "members", columnDefinition = "TEXT")
+    @Convert(converter = MemberListJsonConverter.class)
+    private List<Member> members;
+
 
     public void addQuestion(CheckInQuestionEntity question) {
         question.setCheckIn(this);

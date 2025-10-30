@@ -6,6 +6,7 @@ import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.users.UsersListResponse;
 import com.slack.api.model.User;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,8 @@ public class SlackApiService {
      * @throws SlackApiException if Slack API returns an error
      * @throws IOException       if there's a network error
      */
-    public List<SlackUserDto> getActiveUsers() throws SlackApiException, IOException {
+    @SneakyThrows
+    public List<SlackUserDto> getActiveUsers(){
         log.info("Retrieving active users from Slack workspace");
 
         List<User> allUsers = getAllUsers();

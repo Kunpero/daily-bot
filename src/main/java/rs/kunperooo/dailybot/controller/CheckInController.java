@@ -22,6 +22,7 @@ import rs.kunperooo.dailybot.controller.dto.CheckInFormData;
 import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
 import rs.kunperooo.dailybot.service.CheckInService;
 import rs.kunperooo.dailybot.service.SlackApiService;
+import rs.kunperooo.dailybot.service.dto.SlackUserDto;
 
 import java.util.List;
 import java.util.UUID;
@@ -93,9 +94,11 @@ public class CheckInController {
 
         CheckInFormData checkInForm = CheckInFormData.builder()
                 .build();
+        List<SlackUserDto> activeUsers = slackApiService.getActiveUsers();
 
         model.addAttribute("checkInForm", checkInForm);
         model.addAttribute("isEdit", false);
+        model.addAttribute("activeUsers", activeUsers);
         return "checkin-form";
     }
 
@@ -105,9 +108,12 @@ public class CheckInController {
 
         CheckInRestData checkInForm = checkInService.findByUuid(uuid)
                 .orElseThrow(() -> new RuntimeException("Check-in not found with ID: " + uuid));
+        List<SlackUserDto> activeUsers = slackApiService.getActiveUsers();
 
         model.addAttribute("checkInForm", checkInForm);
         model.addAttribute("isEdit", true);
+        model.addAttribute("activeUsers", activeUsers);
+
         return "checkin-form";
     }
 

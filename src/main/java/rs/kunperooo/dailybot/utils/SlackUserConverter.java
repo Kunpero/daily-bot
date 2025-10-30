@@ -3,7 +3,6 @@ package rs.kunperooo.dailybot.utils;
 import com.slack.api.model.User;
 import rs.kunperooo.dailybot.service.dto.SlackUserDto;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,7 +13,7 @@ public class SlackUserConverter {
 
     /**
      * Converts a Slack User to SlackUserDto
-     * 
+     *
      * @param user The Slack User object
      * @return SlackUserDto
      */
@@ -27,27 +26,12 @@ public class SlackUserConverter {
                 .id(user.getId())
                 .name(user.getName())
                 .realName(user.getRealName())
-                .displayName(user.getProfile() != null ? user.getProfile().getDisplayName() : null)
                 .email(user.getProfile() != null ? user.getProfile().getEmail() : null)
                 .phone(user.getProfile() != null ? user.getProfile().getPhone() : null)
                 .title(user.getProfile() != null ? user.getProfile().getTitle() : null)
-                .statusText(user.getProfile() != null ? user.getProfile().getStatusText() : null)
-                .statusEmoji(user.getProfile() != null ? user.getProfile().getStatusEmoji() : null)
                 .timezone(user.getTz())
                 .timezoneLabel(user.getTzLabel())
                 .locale(user.getLocale())
-                .isAdmin(user.isAdmin())
-                .isOwner(user.isOwner())
-                .isPrimaryOwner(user.isPrimaryOwner())
-                .isBot(user.isBot())
-                .isDeleted(user.isDeleted())
-                .isRestricted(user.isRestricted())
-                .isUltraRestricted(user.isUltraRestricted())
-                .isStranger(user.isStranger())
-                .isAppUser(user.isAppUser())
-                .has2fa(user.isHas2fa())
-                .hasFiles(user.isHasFiles())
-                .updated(user.getUpdated() != null ? Instant.ofEpochSecond(user.getUpdated()) : null)
                 .teamId(user.getTeamId())
                 .profileImage24(user.getProfile() != null ? user.getProfile().getImage24() : null)
                 .profileImage32(user.getProfile() != null ? user.getProfile().getImage32() : null)
@@ -60,7 +44,7 @@ public class SlackUserConverter {
 
     /**
      * Converts a list of Slack Users to SlackUserDto list
-     * 
+     *
      * @param users List of Slack User objects
      * @return List of SlackUserDto
      */
@@ -76,7 +60,7 @@ public class SlackUserConverter {
 
     /**
      * Converts an Optional Slack User to Optional SlackUserDto
-     * 
+     *
      * @param user Optional Slack User object
      * @return Optional SlackUserDto
      */

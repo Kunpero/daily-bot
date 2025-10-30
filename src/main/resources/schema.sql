@@ -23,6 +23,7 @@ CREATE TABLE check_in
     updated_at    TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     intro_message TEXT,
     outro_message TEXT,
+    members         TEXT,
     CONSTRAINT PRINCIPAL_NAME_FK FOREIGN KEY (owner)
         REFERENCES oauth2_authorized_client (principal_name),
     UNIQUE (owner, name)
@@ -57,6 +58,8 @@ COMMENT
 ON COLUMN check_in.intro_message IS 'Optional introduction message for check-in';
 COMMENT
 ON COLUMN check_in.outro_message IS 'Optional conclusion message for check-in';
+COMMENT
+ON COLUMN check_in.members IS 'json with member objects';
 
 COMMENT
 ON TABLE CHECK_IN_QUESTION IS 'Stores check-in questions';

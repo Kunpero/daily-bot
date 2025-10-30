@@ -2,9 +2,11 @@ package rs.kunperooo.dailybot.utils;
 
 import org.springframework.data.domain.Page;
 import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
+import rs.kunperooo.dailybot.controller.dto.MemberDto;
 import rs.kunperooo.dailybot.controller.dto.QuestionDto;
 import rs.kunperooo.dailybot.entity.CheckInEntity;
 import rs.kunperooo.dailybot.entity.CheckInQuestionEntity;
+import rs.kunperooo.dailybot.entity.Member;
 
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -33,6 +35,7 @@ public class Converter {
                 .introMessage(checkIn.getIntroMessage())
                 .outroMessage(checkIn.getOutroMessage())
                 .questions(convertQuestions(checkIn.getCheckInQuestions()))
+                .members(convertMembers(checkIn.getMembers()))
                 .build();
     }
 
@@ -70,5 +73,22 @@ public class Converter {
         return questions.stream()
                 .map(Converter::convert)
                 .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static List<MemberDto> convertMembers(List<Member> members) {
+        if (members == null || members.isEmpty()) {
+            return new LinkedList<>();
+        }
+        return members.stream()
+                .map(Converter::convert)
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static MemberDto convert(Member member) {
+        return MemberDto.builder()
+                .username(member.getUsername())
+                .realName(member.getRealName())
+                .imageUrl(member.getImageUrl())
+                .build();
     }
 }
