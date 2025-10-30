@@ -6,6 +6,8 @@
     <title th:text="${isEdit} ? 'Edit Check-In - Daily Bot' : 'Create Check-In - Daily Bot'">Create Check-In - Daily Bot</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -148,6 +150,28 @@
             font-size: 0.875rem;
             color: #1976d2;
         }
+        /* Select2 styles */
+        .select2-container { width: 100% !important; }
+        .select2-container--bootstrap-5 .select2-selection {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            min-height: 38px;
+        }
+        .select2-container--bootstrap-5 .select2-selection:focus {
+            border-color: #4A154B;
+            box-shadow: 0 0 0 0.2rem rgba(74, 21, 75, 0.25);
+        }
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+            background: #4A154B;
+            border: 1px solid #4A154B;
+            border-radius: 6px;
+            color: #fff;
+            padding: 2px 8px;
+            margin: 2px;
+        }
+        .member-option { display: flex; align-items: center; gap: 8px; }
+        .member-option img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+        .member-option .name { font-weight: 500; color: #333; }
     </style>
 </head>
 <body>
@@ -225,6 +249,25 @@
                                           maxlength="1000"></textarea>
                                 <div class="character-count mt-1">
                                     <span id="introCount">0</span>/1000 characters
+                                </div>
+                            </div>
+
+                            <!-- Members (Slack users) Multi-select -->
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="fas fa-users me-1"></i>
+                                    Select Members
+                                </label>
+                                <select class="form-select" id="membersSelect" multiple>
+                                    <option th:each="user : ${activeUsers != null ? activeUsers : slackUsers}"
+                                            th:value="${user.id}"
+                                            th:data-real-name="${user.realName}"
+                                            th:data-image-url="${user.profileImage24}"
+                                            th:text="${user.realName}">
+                                    </option>
+                                </select>
+                                <div th:if="${activeUsers == null and (slackUsers == null or slackUsers.isEmpty())}" class="text-muted small mt-2">
+                                    No active Slack users available.
                                 </div>
                             </div>
 
@@ -320,6 +363,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script th:inline="javascript">
         let questionCounter = 0;
         let sortable;
@@ -329,6 +374,7 @@
             initializeCharacterCounts();
             initializeQuestions();
             initializeSortable();
+            initializeMembers();
         });
 
         // Character count functionality
@@ -493,6 +539,50 @@
             });
         }
 
+        // Members (Select2) initialization
+        function initializeMembers() {
+            const $select = $('#membersSelect');
+            if ($select.length === 0) return;
+            $select.select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Search and select members...',
+                allowClear: true,
+                width: '100%',
+                templateResult: function (data) {
+                    if (!data.id) return data.text;
+                    const el = $(data.element);
+                    const img = el.data('image-url');
+                    const name = el.data('real-name') || data.text;
+                    return $(
+                        '<div class="member-option">'
+                        + (img ? '<img src="'+img+'" alt="avatar">' : '')
+                        + '<span class="name">'+ name +'</span>'
+                        + '</div>'
+                    );
+                },
+                templateSelection: function (data) {
+                    if (!data.id) return data.text;
+                    const el = $(data.element);
+                    const img = el.data('image-url');
+                    const name = el.data('real-name') || data.text;
+                    return $(
+                        '<div class="member-option">'
+                        + (img ? '<img src="'+img+'" alt="avatar">' : '')
+                        + '<span class="name">'+ name +'</span>'
+                        + '</div>'
+                    );
+                },
+                escapeMarkup: function (m) { return m; }
+            });
+
+            // Preselect existing members on edit
+            const existingMembers = /*[[${checkInForm.members}]]*/ [];
+            if (existingMembers && existingMembers.length > 0) {
+                const ids = existingMembers.map(m => m.id);
+                $select.val(ids).trigger('change');
+            }
+        }
+
         // Live preview functionality
         function updatePreview() {
             const name = document.getElementById('name').value;
@@ -608,6 +698,17 @@
                 addHiddenInput(questionPrefix + '.uuid', question.uuid);
                 addHiddenInput(questionPrefix + '.text', question.text);
                 addHiddenInput(questionPrefix + '.order', question.order);
+            });
+
+            // Add hidden inputs for members (from Select2)
+            const selectedMembers = window.jQuery ? jQuery('#membersSelect').select2('data') : [];
+            // Clear previously added member inputs if any
+            document.querySelectorAll('#checkinForm input[name^="members["]').forEach(n => n.remove());
+            selectedMembers.forEach((m, idx) => {
+                if (!m.id) return;
+                const realName = (window.jQuery && m.element) ? jQuery(m.element).data('real-name') || m.text : m.text;
+                addHiddenInput(`members[${idx}].id`, m.id);
+                addHiddenInput(`members[${idx}].realName`, realName);
             });
         });
 

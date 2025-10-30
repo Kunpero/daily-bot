@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
+import rs.kunperooo.dailybot.controller.dto.MemberDto;
 import rs.kunperooo.dailybot.controller.dto.QuestionDto;
 import rs.kunperooo.dailybot.entity.CheckInEntity;
 import rs.kunperooo.dailybot.entity.CheckInQuestionEntity;
@@ -23,6 +24,7 @@ import java.util.UUID;
 
 import static rs.kunperooo.dailybot.utils.Converter.convert;
 import static rs.kunperooo.dailybot.utils.Converter.convertCheckIns;
+import static rs.kunperooo.dailybot.utils.Converter.convertMemberDtos;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ public class RelationalDbCheckInService implements CheckInService {
     private final CheckInRepository checkInRepository;
     private final CheckInQuestionRepository checkInQuestionRepository;
 
-    public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions) {
+    public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, @NonNull List<MemberDto> members) {
         log.info("Creating new check-in for owner: {} with name: {} and {} questions",
                 owner, name, questions);
 
@@ -45,6 +47,7 @@ public class RelationalDbCheckInService implements CheckInService {
                 .outroMessage(outroMessage)
                 .creationDate(LocalDateTime.now())
                 .lastUpdateDate(LocalDateTime.now())
+                .members(convertMemberDtos(members))
                 .build();
         for (CheckInQuestionEntity question : convert(questions)) {
             checkIn.addQuestion(question);

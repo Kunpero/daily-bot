@@ -91,4 +91,21 @@ public class Converter {
                 .imageUrl(member.getImageUrl())
                 .build();
     }
+
+    public static List<Member> convertMemberDtos(List<MemberDto> members) {
+        if (members == null || members.isEmpty()) {
+            return new LinkedList<>();
+        }
+        return members.stream()
+                .map(Converter::convert)
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static Member convert(MemberDto member) {
+        return Member.builder()
+                .username(member.getUsername())
+                .realName(member.getRealName())
+                .imageUrl(member.getImageUrl())
+                .build();
+    }
 }
