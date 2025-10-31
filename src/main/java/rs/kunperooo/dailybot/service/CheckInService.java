@@ -21,7 +21,7 @@ public interface CheckInService {
 
     Page<CheckInRestData> findByOwner(String owner, Pageable pageable);
 
-    void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, List<QuestionDto> questions);
+    void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, List<QuestionDto> questions, List<MemberDto> members);
 
     void deleteCheckIn(UUID uuid, String owner);
 }

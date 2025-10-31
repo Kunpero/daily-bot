@@ -86,7 +86,7 @@ public class Converter {
 
     public static MemberDto convert(Member member) {
         return MemberDto.builder()
-                .username(member.getUsername())
+                .id(member.getUsername())
                 .realName(member.getRealName())
                 .imageUrl(member.getImageUrl())
                 .build();
@@ -103,7 +103,7 @@ public class Converter {
 
     public static Member convert(MemberDto member) {
         return Member.builder()
-                .username(member.getUsername())
+                .username(member.getId())
                 .realName(member.getRealName())
                 .imageUrl(member.getImageUrl())
                 .build();

@@ -87,7 +87,7 @@ public class RelationalDbCheckInService implements CheckInService {
         return convert(checkInRepository.findByOwner(owner, pageable));
     }
 
-    public void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions) {
+    public void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, List<MemberDto> members) {
         log.info("Updating check-in for ID: {} and owner: {} with name: {} and {} questions",
                 uuid, owner, name, questions);
 
@@ -119,6 +119,7 @@ public class RelationalDbCheckInService implements CheckInService {
         updatedQuestions.addAll(deactivatedQuestions);
 
         checkIn.setCheckInQuestions(updatedQuestions);
+        checkIn.setMembers(convertMemberDtos(members));
         checkIn.setLastUpdateDate(LocalDateTime.now());
 
         checkInRepository.save(checkIn);

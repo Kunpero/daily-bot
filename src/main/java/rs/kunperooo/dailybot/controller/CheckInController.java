@@ -165,7 +165,8 @@ public class CheckInController {
                     checkInForm.getName(),
                     checkInForm.getIntroMessage(),
                     checkInForm.getOutroMessage(),
-                    checkInForm.getQuestions()
+                    checkInForm.getQuestions(),
+                    checkInForm.getMembers()
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Check-in updated successfully!");

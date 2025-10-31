@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MemberDto {
-    private String username;
+    private String id;
     private String realName;
     private String imageUrl;
 }

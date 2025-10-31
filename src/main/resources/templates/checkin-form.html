@@ -579,10 +579,21 @@
             });
 
             // Preselect existing members on edit
-            const existingMembers = /*[[${checkInForm.members}]]*/ [];
-            if (existingMembers && existingMembers.length > 0) {
-                const ids = existingMembers.map(m => m.id);
-                $select.val(ids).trigger('change');
+            const existingMembers = /*[[${checkInForm.members}]]*/ null;
+            const membersList = existingMembers || [];
+            if (Array.isArray(membersList) && membersList.length > 0) {
+                // Wait for Select2 to be fully initialized
+                setTimeout(function() {
+                    const ids = membersList.map(function(m) {
+                        return m != null && m.id != null ? m.id : null;
+                    }).filter(function(id) {
+                        return id != null && id !== '';
+                    });
+                    
+                    if (ids.length > 0) {
+                        $select.val(ids).trigger('change');
+                    }
+                }, 100);
             }
         }
 
