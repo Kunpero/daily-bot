@@ -162,7 +162,7 @@
             box-shadow: 0 0 0 0.2rem rgba(74, 21, 75, 0.25);
         }
         .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
-            background: #4A154B;
+            background: #8cbdc1;
             border: 1px solid #4A154B;
             border-radius: 6px;
             color: #fff;
@@ -342,24 +342,6 @@
                         </form>
                     </div>
                 </div>
-
-                <!-- Preview Card -->
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-eye me-2"></i>
-                            Live Preview
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="previewContent">
-                            <div class="text-muted text-center">
-                                <i class="fas fa-eye-slash fa-2x mb-2"></i>
-                                <p>Start typing to see a preview of your check-in</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -483,19 +465,16 @@
                     }, 500);
                 }
                 
-                updatePreview();
             });
 
             // Remove button
             newQuestion.querySelector('.remove-question').addEventListener('click', function() {
                 newQuestion.remove();
                 updateQuestionNumbers();
-                updatePreview();
                 updateQuestionsContainer();
             });
 
             updateQuestionsContainer();
-            updatePreview();
         }
 
         function isLastQuestion(questionElement) {
@@ -537,7 +516,6 @@
                 handle: '.question-handle',
                 onEnd: function(evt) {
                     updateQuestionNumbers();
-                    updatePreview();
                 }
             });
         }
@@ -595,97 +573,6 @@
                     }
                 }, 100);
             }
-        }
-
-        // Live preview functionality
-        function updatePreview() {
-            const name = document.getElementById('name').value;
-            const introMessage = document.getElementById('introMessage').value;
-            const outroMessage = document.getElementById('outroMessage').value;
-            const previewContent = document.getElementById('previewContent');
-            
-            if (!name && !introMessage && !outroMessage) {
-                previewContent.innerHTML = `
-                    <div class="text-muted text-center">
-                        <i class="fas fa-eye-slash fa-2x mb-2"></i>
-                        <p>Start typing to see a preview of your check-in</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            let previewHtml = '<div class="checkin-preview">';
-            
-            if (name) {
-                previewHtml += `
-                    <div class="mb-3">
-                        <h5 class="text-primary">
-                            <i class="fas fa-tag me-1"></i>
-                            ${name}
-                        </h5>
-                    </div>
-                `;
-            }
-            
-            if (introMessage) {
-                previewHtml += `
-                    <div class="mb-3">
-                        <h6 class="text-success">
-                            <i class="fas fa-play-circle me-1"></i>
-                            Introduction Message
-                        </h6>
-                        <div class="bg-light p-3 rounded">
-                            <p class="mb-0">${introMessage.replace(/\n/g, '<br>')}</p>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Questions preview
-            const questions = document.querySelectorAll('.question-item');
-            if (questions.length > 0) {
-                previewHtml += `
-                    <div class="mb-3">
-                        <h6 class="text-info">
-                            <i class="fas fa-question-circle me-1"></i>
-                            Questions (${questions.length})
-                        </h6>
-                `;
-                
-                questions.forEach((question, index) => {
-                    const text = question.querySelector('.question-text').value;
-                    
-                    if (text.trim()) {
-                        previewHtml += `
-                            <div class="bg-light p-3 rounded mb-2">
-                                <div class="d-flex align-items-center">
-                                    <div class="question-number me-2">${index + 1}</div>
-                                    <div><strong>${text}</strong></div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                });
-                
-                previewHtml += '</div>';
-            }
-            
-            if (outroMessage) {
-                previewHtml += `
-                    <div class="mb-3">
-                        <h6 class="text-info">
-                            <i class="fas fa-stop-circle me-1"></i>
-                            Conclusion Message
-                        </h6>
-                        <div class="bg-light p-3 rounded">
-                            <p class="mb-0">${outroMessage.replace(/\n/g, '<br>')}</p>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            previewHtml += '</div>';
-            previewContent.innerHTML = previewHtml;
         }
 
         // Form submission
@@ -763,8 +650,6 @@
             });
         }
 
-        // Initialize preview
-        updatePreview();
     </script>
 </body>
 </html>
