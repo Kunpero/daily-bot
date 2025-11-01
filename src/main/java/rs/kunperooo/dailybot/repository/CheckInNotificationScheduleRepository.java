@@ -16,5 +16,5 @@ public interface CheckInNotificationScheduleRepository extends JpaRepository<Che
 
     void deleteByCheckInId(Long checkInId);
 
-    List<CheckInNotificationScheduleEntity> findByNextExecutionAtIsNotNull();
+    List<CheckInNotificationScheduleEntity> findByNextExecutionIsNotNull();
 }

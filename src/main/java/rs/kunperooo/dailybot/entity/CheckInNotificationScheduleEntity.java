@@ -10,7 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -28,6 +27,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,8 +63,8 @@ public class CheckInNotificationScheduleEntity {
     @Column(name = "timezone", nullable = false, length = 50)
     private String timezone;
 
-    @Column(name = "next_execution_at")
-    private LocalDateTime nextExecutionAt;
+    @Column(name = "next_execution")
+    private ZonedDateTime nextExecution;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)

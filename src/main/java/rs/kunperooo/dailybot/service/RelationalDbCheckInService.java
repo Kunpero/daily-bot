@@ -18,16 +18,25 @@ import rs.kunperooo.dailybot.repository.CheckInNotificationScheduleRepository;
 import rs.kunperooo.dailybot.repository.CheckInQuestionRepository;
 import rs.kunperooo.dailybot.repository.CheckInRepository;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import static rs.kunperooo.dailybot.utils.Converter.convert;
 import static rs.kunperooo.dailybot.utils.Converter.convertCheckIns;
 import static rs.kunperooo.dailybot.utils.Converter.convertMemberDtos;
+import static rs.kunperooo.dailybot.utils.ScheduleUtils.calculateNextExecution;
 
 @Service
 @RequiredArgsConstructor
@@ -158,6 +167,8 @@ public class RelationalDbCheckInService implements CheckInService {
             return;
         }
 
+        ZonedDateTime nextExecution = calculateNextExecution(schedule);
+
         CheckInNotificationScheduleEntity scheduleEntity = CheckInNotificationScheduleEntity.builder()
                 .checkIn(checkIn)
                 .startDate(schedule.getStartDate())
@@ -165,12 +176,13 @@ public class RelationalDbCheckInService implements CheckInService {
                 .timezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null)
                 .frequency(schedule.getFrequency())
                 .weekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>())
+                .nextExecution(nextExecution)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
         scheduleRepository.save(scheduleEntity);
-        log.info("Schedule saved for check-in ID: {}", checkIn.getId());
+        log.info("Schedule saved for check-in ID: {} with next execution at: {}", checkIn.getId(), nextExecution);
     }
 
     private void updateSchedule(CheckInEntity checkIn, Schedule schedule) {
@@ -196,6 +208,7 @@ public class RelationalDbCheckInService implements CheckInService {
             scheduleEntity.setTimezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null);
             scheduleEntity.setFrequency(schedule.getFrequency());
             scheduleEntity.setWeekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>());
+            scheduleEntity.setNextExecution(calculateNextExecution(schedule));
             scheduleEntity.setUpdatedAt(LocalDateTime.now());
             log.info("Schedule updated for check-in ID: {}", checkIn.getId());
         } else {
@@ -207,6 +220,7 @@ public class RelationalDbCheckInService implements CheckInService {
                     .timezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null)
                     .frequency(schedule.getFrequency())
                     .weekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>())
+                    .nextExecution(calculateNextExecution(schedule))
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
