@@ -10,8 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
 import rs.kunperooo.dailybot.controller.dto.MemberDto;
 import rs.kunperooo.dailybot.controller.dto.QuestionDto;
+import rs.kunperooo.dailybot.controller.dto.Schedule;
 import rs.kunperooo.dailybot.entity.CheckInEntity;
+import rs.kunperooo.dailybot.entity.CheckInNotificationScheduleEntity;
 import rs.kunperooo.dailybot.entity.CheckInQuestionEntity;
+import rs.kunperooo.dailybot.repository.CheckInNotificationScheduleRepository;
 import rs.kunperooo.dailybot.repository.CheckInQuestionRepository;
 import rs.kunperooo.dailybot.repository.CheckInRepository;
 
@@ -34,8 +37,9 @@ public class RelationalDbCheckInService implements CheckInService {
 
     private final CheckInRepository checkInRepository;
     private final CheckInQuestionRepository checkInQuestionRepository;
+    private final CheckInNotificationScheduleRepository scheduleRepository;
 
-    public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, @NonNull List<MemberDto> members) {
+    public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, @NonNull List<MemberDto> members, Schedule schedule) {
         log.info("Creating new check-in for owner: {} with name: {} and {} questions",
                 owner, name, questions);
 
@@ -55,6 +59,10 @@ public class RelationalDbCheckInService implements CheckInService {
 
         CheckInEntity savedCheckIn = checkInRepository.save(checkIn);
         log.info("Check-in created successfully with ID: {}", savedCheckIn.getId());
+
+        if (schedule != null && schedule.getStartDate() != null) {
+            saveSchedule(savedCheckIn, schedule);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -87,7 +95,7 @@ public class RelationalDbCheckInService implements CheckInService {
         return convert(checkInRepository.findByOwner(owner, pageable));
     }
 
-    public void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, List<MemberDto> members) {
+    public void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, List<MemberDto> members, Schedule schedule) {
         log.info("Updating check-in for ID: {} and owner: {} with name: {} and {} questions",
                 uuid, owner, name, questions);
 
@@ -122,6 +130,14 @@ public class RelationalDbCheckInService implements CheckInService {
         checkIn.setMembers(convertMemberDtos(members));
         checkIn.setLastUpdateDate(LocalDateTime.now());
 
+        CheckInNotificationScheduleEntity scheduleEntity = checkIn.getNotificationSchedule()
+                .setStartDate(schedule.getStartDate())
+                .setTime(schedule.getTime())
+                .setTimezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null)
+                .setFrequency(schedule.getFrequency())
+                .setWeekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>())
+                .setUpdatedAt(LocalDateTime.now());
+        checkIn.setNotificationSchedule(scheduleEntity);
         checkInRepository.save(checkIn);
     }
 
@@ -134,5 +150,69 @@ public class RelationalDbCheckInService implements CheckInService {
 
         checkInRepository.deleteByUuid(uuid);
         log.info("Check-in deleted successfully");
+    }
+
+    private void saveSchedule(CheckInEntity checkIn, Schedule schedule) {
+        if (schedule.getStartDate() == null) {
+            log.debug("Skipping schedule save - startDate is null");
+            return;
+        }
+
+        CheckInNotificationScheduleEntity scheduleEntity = CheckInNotificationScheduleEntity.builder()
+                .checkIn(checkIn)
+                .startDate(schedule.getStartDate())
+                .time(schedule.getTime())
+                .timezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null)
+                .frequency(schedule.getFrequency())
+                .weekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        scheduleRepository.save(scheduleEntity);
+        log.info("Schedule saved for check-in ID: {}", checkIn.getId());
+    }
+
+    private void updateSchedule(CheckInEntity checkIn, Schedule schedule) {
+        Optional<CheckInNotificationScheduleEntity> existingSchedule = scheduleRepository.findByCheckInId(checkIn.getId())
+                .stream()
+                .findFirst();
+
+        if (schedule == null || schedule.getStartDate() == null) {
+            // Delete existing schedule if schedule is not provided or startDate is null
+            existingSchedule.ifPresent(s -> {
+                scheduleRepository.delete(s);
+                log.info("Schedule deleted for check-in ID: {}", checkIn.getId());
+            });
+            return;
+        }
+
+        CheckInNotificationScheduleEntity scheduleEntity;
+        if (existingSchedule.isPresent()) {
+            // Update existing schedule
+            scheduleEntity = existingSchedule.get();
+            scheduleEntity.setStartDate(schedule.getStartDate());
+            scheduleEntity.setTime(schedule.getTime());
+            scheduleEntity.setTimezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null);
+            scheduleEntity.setFrequency(schedule.getFrequency());
+            scheduleEntity.setWeekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>());
+            scheduleEntity.setUpdatedAt(LocalDateTime.now());
+            log.info("Schedule updated for check-in ID: {}", checkIn.getId());
+        } else {
+            // Create new schedule
+            scheduleEntity = CheckInNotificationScheduleEntity.builder()
+                    .checkIn(checkIn)
+                    .startDate(schedule.getStartDate())
+                    .time(schedule.getTime())
+                    .timezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null)
+                    .frequency(schedule.getFrequency())
+                    .weekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>())
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            log.info("Schedule created for check-in ID: {}", checkIn.getId());
+        }
+
+        scheduleRepository.save(scheduleEntity);
     }
 }

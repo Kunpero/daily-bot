@@ -134,7 +134,8 @@ public class CheckInController {
                     checkInForm.getIntroMessage(),
                     checkInForm.getOutroMessage(),
                     checkInForm.getQuestions(),
-                    checkInForm.getMembers()
+                    checkInForm.getMembers(),
+                    checkInForm.getSchedule()
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Check-in created successfully!");
@@ -166,7 +167,8 @@ public class CheckInController {
                     checkInForm.getIntroMessage(),
                     checkInForm.getOutroMessage(),
                     checkInForm.getQuestions(),
-                    checkInForm.getMembers()
+                    checkInForm.getMembers(),
+                    checkInForm.getSchedule()
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Check-in updated successfully!");

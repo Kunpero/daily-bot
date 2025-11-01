@@ -27,4 +27,6 @@ public class CheckInRestData {
     private List<QuestionDto> questions;
 
     private List<MemberDto> members;
+
+    private RestSchedule schedule;
 }

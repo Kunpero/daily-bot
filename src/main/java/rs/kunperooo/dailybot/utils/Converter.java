@@ -4,7 +4,9 @@ import org.springframework.data.domain.Page;
 import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
 import rs.kunperooo.dailybot.controller.dto.MemberDto;
 import rs.kunperooo.dailybot.controller.dto.QuestionDto;
+import rs.kunperooo.dailybot.controller.dto.RestSchedule;
 import rs.kunperooo.dailybot.entity.CheckInEntity;
+import rs.kunperooo.dailybot.entity.CheckInNotificationScheduleEntity;
 import rs.kunperooo.dailybot.entity.CheckInQuestionEntity;
 import rs.kunperooo.dailybot.entity.Member;
 
@@ -36,6 +38,17 @@ public class Converter {
                 .outroMessage(checkIn.getOutroMessage())
                 .questions(convertQuestions(checkIn.getCheckInQuestions()))
                 .members(convertMembers(checkIn.getMembers()))
+                .schedule(convert(checkIn.getNotificationSchedule()))
+                .build();
+    }
+
+    public static RestSchedule convert(CheckInNotificationScheduleEntity schedule) {
+        return RestSchedule.builder()
+                .startDate(schedule.getStartDate())
+                .time(schedule.getTime())
+                .timezone(schedule.getTimezone())
+                .frequency(schedule.getFrequency())
+                .days(schedule.getWeekDays())
                 .build();
     }
 

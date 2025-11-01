@@ -16,7 +16,10 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.Accessors;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import rs.kunperooo.dailybot.utils.WeekDayListJsonConverter;
@@ -34,6 +37,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 public class CheckInNotificationScheduleEntity {
 
     @Id
@@ -42,6 +46,8 @@ public class CheckInNotificationScheduleEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "check_in_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private CheckInEntity checkIn;
 
     @Column(name = "start_date", nullable = false)

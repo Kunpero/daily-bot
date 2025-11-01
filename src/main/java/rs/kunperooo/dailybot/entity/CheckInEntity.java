@@ -9,12 +9,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import rs.kunperooo.dailybot.utils.MemberListJsonConverter;
@@ -67,6 +70,11 @@ public class CheckInEntity {
     @Column(name = "members", columnDefinition = "TEXT")
     @Convert(converter = MemberListJsonConverter.class)
     private List<Member> members;
+
+    @OneToOne(mappedBy = "checkIn", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private CheckInNotificationScheduleEntity notificationSchedule;
 
 
     public void addQuestion(CheckInQuestionEntity question) {
