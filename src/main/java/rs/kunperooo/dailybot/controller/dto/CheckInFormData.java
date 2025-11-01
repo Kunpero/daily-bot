@@ -22,4 +22,6 @@ public class CheckInFormData {
     private List<QuestionDto> questions;
 
     private List<MemberDto> members;
+
+    private Schedule schedule;
 }

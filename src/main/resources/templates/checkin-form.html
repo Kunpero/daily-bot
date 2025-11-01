@@ -172,6 +172,38 @@
         .member-option { display: flex; align-items: center; gap: 8px; }
         .member-option img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
         .member-option .name { font-weight: 500; color: #333; }
+        /* Days of week selector */
+        .d-days-of-week { margin-top: 0.5rem; }
+        .d-days-of-week ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .d-days-of-week li {
+            cursor: pointer;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            background: #fff;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .d-days-of-week li:hover {
+            background: #f8f9fa;
+            border-color: #4A154B;
+        }
+        .d-days-of-week li.active {
+            background: #4A154B;
+            border-color: #4A154B;
+            color: #fff;
+        }
+        .d-days-of-week li span {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -315,6 +347,85 @@
                                 </div>
                             </div>
 
+                            <!-- Schedule Section -->
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    Notification Schedule (Optional)
+                                </label>
+                                
+                                <!-- Start Date -->
+                                <div class="mb-3">
+                                    <label for="scheduleStartDate" class="form-label small">Start Date</label>
+                                    <input type="date" class="form-control" id="scheduleStartDate" 
+                                           th:field="*{schedule.startDate}">
+                                </div>
+
+                                <!-- Time -->
+                                <div class="mb-3">
+                                    <label for="scheduleTime" class="form-label small">Time</label>
+                                    <input type="time" class="form-control" id="scheduleTime"
+                                           th:field="*{schedule.time}">
+                                </div>
+
+                                <!-- Timezone -->
+                                <div class="mb-3">
+                                    <label for="scheduleTimezone" class="form-label small">Timezone</label>
+                                    <select class="form-select" id="scheduleTimezone" th:field="*{schedule.timezone}">
+                                        <option value="">Select timezone...</option>
+                                        <option value="America/New_York">America/New_York (EST/EDT)</option>
+                                        <option value="America/Chicago">America/Chicago (CST/CDT)</option>
+                                        <option value="America/Denver">America/Denver (MST/MDT)</option>
+                                        <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
+                                        <option value="Europe/London">Europe/London (GMT/BST)</option>
+                                        <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+                                        <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                                        <option value="Asia/Shanghai">Asia/Shanghai (CST)</option>
+                                        <option value="Australia/Sydney">Australia/Sydney (AEST/AEDT)</option>
+                                        <option value="UTC">UTC</option>
+                                    </select>
+                                </div>
+
+                                <!-- Frequency -->
+                                <div class="mb-3">
+                                    <label for="scheduleFrequency" class="form-label small">Frequency</label>
+                                    <select class="form-select" id="scheduleFrequency" th:field="*{schedule.frequency}">
+                                        <option value="">Select frequency...</option>
+                                        <option value="BI_WEEKLY">Bi-Weekly</option>
+                                    </select>
+                                </div>
+
+                                <!-- Days of Week -->
+                                <div class="mb-3">
+                                    <label class="form-label small">Days</label>
+                                    <div class="d-days-of-week container-popover">
+                                        <ul class="el-tooltip__trigger">
+                                            <li id="input-schedule-days-monday" class="day-option" data-day="MONDAY">
+                                                <span>Mon</span>
+                                            </li>
+                                            <li id="input-schedule-days-tuesday" class="day-option" data-day="TUESDAY">
+                                                <span>Tue</span>
+                                            </li>
+                                            <li id="input-schedule-days-wednesday" class="day-option" data-day="WEDNESDAY">
+                                                <span>Wed</span>
+                                            </li>
+                                            <li id="input-schedule-days-thursday" class="day-option" data-day="THURSDAY">
+                                                <span>Thu</span>
+                                            </li>
+                                            <li id="input-schedule-days-friday" class="day-option" data-day="FRIDAY">
+                                                <span>Fri</span>
+                                            </li>
+                                            <li id="input-schedule-days-saturday" class="day-option" data-day="SATURDAY">
+                                                <span>Sat</span>
+                                            </li>
+                                            <li id="input-schedule-days-sunday" class="day-option" data-day="SUNDAY">
+                                                <span>Sun</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Form Actions -->
                             <div class="d-flex justify-content-between">
                                 <a href="/checkin" class="btn btn-secondary">
@@ -347,6 +458,7 @@
             initializeQuestions();
             initializeSortable();
             initializeMembers();
+            initializeSchedule();
         });
 
         // Character count functionality
@@ -619,6 +731,38 @@
                 addHiddenInput(`members[${idx}].username`, username);
                 addHiddenInput(`members[${idx}].imageUrl`, imageUrl);
             });
+
+            // Collect schedule data
+            const scheduleStartDate = document.getElementById('scheduleStartDate').value;
+            const scheduleTime = document.getElementById('scheduleTime').value;
+            const scheduleTimezone = document.getElementById('scheduleTimezone').value;
+            const scheduleFrequency = document.getElementById('scheduleFrequency').value;
+            
+            // Collect selected days
+            const selectedDays = [];
+            document.querySelectorAll('.day-option.active').forEach(function(li) {
+                selectedDays.push(li.getAttribute('data-day'));
+            });
+
+            // Add schedule data as hidden inputs if any field is filled
+            if (scheduleStartDate || scheduleTime || scheduleTimezone || scheduleFrequency || selectedDays.length > 0) {
+                if (scheduleStartDate) {
+                    addHiddenInput('schedule.startDate', scheduleStartDate);
+                }
+                if (scheduleTime) {
+                    addHiddenInput('schedule.time', scheduleTime);
+                }
+                if (scheduleTimezone) {
+                    addHiddenInput('schedule.timezone', scheduleTimezone);
+                }
+                if (scheduleFrequency) {
+                    addHiddenInput('schedule.frequency', scheduleFrequency);
+                }
+                // Add days as array
+                selectedDays.forEach(function(day, index) {
+                    addHiddenInput(`schedule.days[${index}]`, day);
+                });
+            }
         });
 
         function addHiddenInput(name, value) {
@@ -635,6 +779,32 @@
                 const v = c == 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
+        }
+
+        // Schedule initialization
+        function initializeSchedule() {
+            // Initialize day selection
+            document.querySelectorAll('.day-option').forEach(function(li) {
+                li.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                });
+            });
+
+            // Load existing schedule days from form data
+            const existingSchedule = /*[[${checkInForm.schedule}]]*/ null;
+            if (existingSchedule && existingSchedule.days) {
+                const existingDays = Array.isArray(existingSchedule.days) 
+                    ? existingSchedule.days 
+                    : (existingSchedule.days instanceof Set ? Array.from(existingSchedule.days) : []);
+                
+                existingDays.forEach(function(day) {
+                    const dayName = typeof day === 'string' ? day : day.name();
+                    const dayElement = document.querySelector(`.day-option[data-day="${dayName}"]`);
+                    if (dayElement) {
+                        dayElement.classList.add('active');
+                    }
+                });
+            }
         }
 
     </script>
