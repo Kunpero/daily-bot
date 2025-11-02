@@ -1,8 +1,10 @@
 package rs.kunperooo.dailybot.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -21,6 +23,7 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepo
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.SecurityFilterChain;
+import rs.kunperooo.dailybot.filter.SlackRequestVerifierFilter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +31,7 @@ import java.util.Set;
 
 @Configuration
 @EnableWebSecurity
-public class OAuth2Config {
+public class SecurityConfig {
 
     @Value("${admin.list}")
     private Set<String> admins;
@@ -37,7 +40,8 @@ public class OAuth2Config {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/", "/login", "/oauth2/**", "/error", "/h2-console/**").permitAll()
+                        .requestMatchers("/", "/login", "/oauth2/**", "/error",
+                                "/h2-console/**", "/slack/test", "/interactivity").permitAll()
                         .requestMatchers("/checkin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
@@ -79,5 +83,19 @@ public class OAuth2Config {
             }
             return new DefaultOidcUser(mappedAuthorities, oidcUser.getIdToken(), oidcUser.getUserInfo());
         };
+    }
+
+    @Bean
+    public SlackRequestVerifierFilter slackRequestVerifierFilter(SlackRequestVerifier slackRequestVerifier) {
+        return new SlackRequestVerifierFilter(slackRequestVerifier);
+    }
+
+    @Bean
+    public FilterRegistrationBean slackRequestVerifierFilterRegistration(SlackRequestVerifierFilter filter) {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setFilter(filter);
+        registration.addUrlPatterns("/interactivity/*");
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return registration;
     }
 }
