@@ -17,7 +17,7 @@ CREATE TABLE check_in
 (
     id            BIGSERIAL PRIMARY KEY,
     uuid          VARCHAR(36) unique NOT NULL,
-    owner         VARCHAR(200)       NOT NULL,
+    owner         VARCHAR(50)       NOT NULL,
     name          VARCHAR(255)       NOT NULL,
     created_at    TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -44,6 +44,18 @@ CREATE TABLE CHECK_IN_QUESTION
         REFERENCES check_in (id),
     UNIQUE (check_in_id, order_number)
 );
+
+CREATE TABLE CHECK_IN_ANSWER
+(
+    id            BIGSERIAL PRIMARY KEY,
+    uuid          VARCHAR(36) unique NOT NULL,
+    user_id       VARCHAR(50)       NOT NULL,
+    question_id   BIGSERIAL,
+    answer        TEXT,
+    CONSTRAINT CHECK_IN_QUESTION_ID_FK FOREIGN KEY (question_id)
+        REFERENCES CHECK_IN_QUESTION (id)
+);
+CREATE INDEX idx_check_question_id ON CHECK_IN_ANSWER (question_id);
 
 CREATE TABLE check_in_notification_schedule
 (
@@ -108,3 +120,12 @@ COMMENT
 ON COLUMN check_in_notification_schedule.next_execution IS 'Next scheduled execution timestamp with timezone';
 COMMENT
 ON COLUMN check_in_notification_schedule.week_days IS 'JSON array of week days (e.g., ["MONDAY", "TUESDAY"])';
+
+COMMENT
+ON TABLE CHECK_IN_ANSWER IS 'Stores check-in answers to questions';
+COMMENT
+ON COLUMN CHECK_IN_ANSWER.user_id IS 'Slack userid of a respondent';
+COMMENT
+ON COLUMN CHECK_IN_ANSWER.uuid IS 'UUID of the answer';
+COMMENT
+ON COLUMN CHECK_IN_ANSWER.answer IS 'Text representation of an answer';
