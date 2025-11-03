@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import rs.kunperooo.dailybot.controller.dto.CheckInFormData;
-import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
+import rs.kunperooo.dailybot.controller.dto.CheckInData;
 import rs.kunperooo.dailybot.service.CheckInService;
 import rs.kunperooo.dailybot.service.SlackApiService;
 import rs.kunperooo.dailybot.service.dto.SlackUserDto;
@@ -54,14 +54,14 @@ public class CheckInController {
                 : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<CheckInRestData> checkInPage;
+        Page<CheckInData> checkInPage;
 
         if (owner != null && !owner.trim().isEmpty()) {
             checkInPage = checkInService.findByOwner(owner, pageable);
         } else {
             // For admin, we need to get all check-ins - this would need a different service method
             // For now, we'll use a workaround by getting all check-ins and paginating manually
-            List<CheckInRestData> allCheckIns = checkInService.findAll();
+            List<CheckInData> allCheckIns = checkInService.findAll();
             checkInPage = createPageFromList(allCheckIns, pageable);
         }
 
@@ -81,7 +81,7 @@ public class CheckInController {
     public String viewCheckIn(@PathVariable UUID uuid, Model model) {
         log.debug("Viewing check-in with ID: {}", uuid);
 
-        CheckInRestData checkInForm = checkInService.findByUuid(uuid)
+        CheckInData checkInForm = checkInService.findByUuid(uuid)
                 .orElseThrow(() -> new RuntimeException("Check-in not found with ID: " + uuid));
 
         model.addAttribute("checkInForm", checkInForm);
@@ -106,7 +106,7 @@ public class CheckInController {
     public String showEditForm(@PathVariable UUID uuid, Model model) {
         log.debug("Showing edit form for check-in ID: {}", uuid);
 
-        CheckInRestData checkInForm = checkInService.findByUuid(uuid)
+        CheckInData checkInForm = checkInService.findByUuid(uuid)
                 .orElseThrow(() -> new RuntimeException("Check-in not found with ID: " + uuid));
         List<SlackUserDto> activeUsers = slackApiService.getActiveUsers();
 
@@ -202,7 +202,7 @@ public class CheckInController {
     /**
      * Helper method to create a Page from a List (for admin view)
      */
-    private Page<CheckInRestData> createPageFromList(List<CheckInRestData> list, Pageable pageable) {
+    private Page<CheckInData> createPageFromList(List<CheckInData> list, Pageable pageable) {
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), list.size());
 
@@ -210,7 +210,7 @@ public class CheckInController {
             return Page.empty(pageable);
         }
 
-        List<CheckInRestData> pageContent = list.subList(start, end);
+        List<CheckInData> pageContent = list.subList(start, end);
         return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, list.size());
     }
 }

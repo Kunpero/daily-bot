@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class CheckInRestData {
+public class CheckInData {
     private UUID uuid;
 
     private String owner;

@@ -24,7 +24,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
+import rs.kunperooo.dailybot.controller.dto.CheckInData;
 import rs.kunperooo.dailybot.entity.CheckInEntity;
 import rs.kunperooo.dailybot.service.dto.SlackUserDto;
 import rs.kunperooo.dailybot.utils.SlackUserConverter;
@@ -74,7 +74,7 @@ public class SlackApiService {
     }
 
     @SneakyThrows
-    public void openCheckInAnswersView(String triggerId, CheckInRestData checkIn) {
+    public void openCheckInAnswersView(String triggerId, CheckInData checkIn) {
         List<LayoutBlock> inputBlocks = checkIn.getQuestions().stream()
                 .map(q ->
                         Blocks.input(input -> input

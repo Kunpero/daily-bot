@@ -1,7 +1,7 @@
 package rs.kunperooo.dailybot.utils;
 
 import org.springframework.data.domain.Page;
-import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
+import rs.kunperooo.dailybot.controller.dto.CheckInData;
 import rs.kunperooo.dailybot.controller.dto.MemberDto;
 import rs.kunperooo.dailybot.controller.dto.QuestionDto;
 import rs.kunperooo.dailybot.controller.dto.RestSchedule;
@@ -17,18 +17,18 @@ import java.util.Optional;
 
 public class Converter {
 
-    public static List<CheckInRestData> convertCheckIns(List<CheckInEntity> checkInList) {
+    public static List<CheckInData> convertCheckIns(List<CheckInEntity> checkInList) {
         return checkInList.stream()
                 .map(Converter::convert)
                 .toList();
     }
 
-    public static Optional<CheckInRestData> convert(Optional<CheckInEntity> checkIn) {
+    public static Optional<CheckInData> convert(Optional<CheckInEntity> checkIn) {
         return checkIn.map(Converter::convert);
     }
 
-    public static CheckInRestData convert(CheckInEntity checkIn) {
-        return CheckInRestData.builder()
+    public static CheckInData convert(CheckInEntity checkIn) {
+        return CheckInData.builder()
                 .uuid(checkIn.getUuid())
                 .owner(checkIn.getOwner())
                 .name(checkIn.getName())
@@ -75,7 +75,7 @@ public class Converter {
                 .build();
     }
 
-    public static Page<CheckInRestData> convert(Page<CheckInEntity> checkInPage) {
+    public static Page<CheckInData> convert(Page<CheckInEntity> checkInPage) {
         return checkInPage.map(Converter::convert);
     }
 

@@ -3,7 +3,7 @@ package rs.kunperooo.dailybot.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
+import rs.kunperooo.dailybot.controller.dto.CheckInData;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -18,7 +18,7 @@ public class CheckInInteractivityService {
     public void openCheckInAnswersView(String triggerId, String checkInUuid) {
         log.info("Sending check in submit form to Slack");
 
-        Optional<CheckInRestData> checkIn = checkInService.findByUuid(UUID.fromString(checkInUuid));
+        Optional<CheckInData> checkIn = checkInService.findByUuid(UUID.fromString(checkInUuid));
         slackApiService.openCheckInAnswersView(triggerId, checkIn.get());
     }
 

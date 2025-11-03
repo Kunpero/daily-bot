@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import rs.kunperooo.dailybot.controller.dto.CheckInRestData;
+import rs.kunperooo.dailybot.controller.dto.CheckInData;
 import rs.kunperooo.dailybot.controller.dto.MemberDto;
 import rs.kunperooo.dailybot.controller.dto.QuestionDto;
 import rs.kunperooo.dailybot.controller.dto.Schedule;
@@ -68,19 +68,19 @@ public class RelationalDbCheckInService implements CheckInService {
     }
 
     @Transactional(readOnly = true)
-    public List<CheckInRestData> findByOwner(String owner) {
+    public List<CheckInData> findByOwner(String owner) {
         log.debug("Finding all check-ins for owner: {}", owner);
         return convertCheckIns(checkInRepository.findByOwner(owner));
     }
 
     @Transactional(readOnly = true)
-    public List<CheckInRestData> findAll() {
+    public List<CheckInData> findAll() {
         log.debug("Finding all check-ins");
         return convertCheckIns(checkInRepository.findAll());
     }
 
     @Transactional(readOnly = true)
-    public Optional<CheckInRestData> findByUuid(UUID uuid) {
+    public Optional<CheckInData> findByUuid(UUID uuid) {
         log.debug("Finding check-in by ID: {}", uuid);
         Optional<CheckInEntity> checkIn = checkInRepository.findByUuid(uuid);
         List<CheckInQuestionEntity> activeQuestions;
@@ -92,7 +92,7 @@ public class RelationalDbCheckInService implements CheckInService {
     }
 
     @Transactional(readOnly = true)
-    public Page<CheckInRestData> findByOwner(String owner, Pageable pageable) {
+    public Page<CheckInData> findByOwner(String owner, Pageable pageable) {
         log.debug("Finding check-ins for owner: {} with pagination", owner);
         return convert(checkInRepository.findByOwner(owner, pageable));
     }
