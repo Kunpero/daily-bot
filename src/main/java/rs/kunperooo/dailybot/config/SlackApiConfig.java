@@ -3,6 +3,7 @@ package rs.kunperooo.dailybot.config;
 import com.google.gson.Gson;
 import com.slack.api.Slack;
 import com.slack.api.SlackConfig;
+import com.slack.api.app_backend.interactive_components.ActionResponseSender;
 import com.slack.api.util.json.GsonFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +30,11 @@ public class SlackApiConfig {
         config.setHttpClientReadTimeoutMillis(apiTimeout);
         config.setHttpClientWriteTimeoutMillis(apiTimeout);
         return Slack.getInstance(config);
+    }
+
+    @Bean
+    public ActionResponseSender responseSender(Slack slack) {
+        return new ActionResponseSender(slack);
     }
 
     @Bean

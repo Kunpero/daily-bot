@@ -1,6 +1,9 @@
 package rs.kunperooo.dailybot.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.Slack;
+import com.slack.api.app_backend.interactive_components.ActionResponseSender;
+import com.slack.api.app_backend.interactive_components.response.ActionResponse;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
@@ -24,16 +27,19 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import rs.kunperooo.dailybot.controller.dto.CheckInData;
-import rs.kunperooo.dailybot.entity.CheckInEntity;
+import rs.kunperooo.dailybot.controller.dto.CheckInSubmissionMeta;
+import rs.kunperooo.dailybot.entity.CheckInAnswerEntity;
+import rs.kunperooo.dailybot.entity.CheckInHistoryEntity;
 import rs.kunperooo.dailybot.service.dto.SlackUserDto;
 import rs.kunperooo.dailybot.utils.SlackUserConverter;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static rs.kunperooo.dailybot.utils.ActionId.FINISH_CHECK_IN;
 import static rs.kunperooo.dailybot.utils.ActionId.START_CHECK_IN;
 
 @Service
@@ -42,10 +48,13 @@ import static rs.kunperooo.dailybot.utils.ActionId.START_CHECK_IN;
 public class SlackApiService {
 
     public static final String PLAIN_TEXT_TYPE = "plain_text";
+
     @Value("${slack.bot.token:}")
     private String slackBotToken;
 
     private final Slack slack;
+    private final ActionResponseSender actionResponseSender;
+    private final ObjectMapper objectMapper;
 
     /**
      * Retrieves active users only (excluding deleted and bot users)
@@ -73,14 +82,25 @@ public class SlackApiService {
         return userDtos;
     }
 
+    /**
+     * todo document blockId идентификатор questionInHistory, а actionId идентификатором answer
+     */
     @SneakyThrows
-    public void openCheckInAnswersView(String triggerId, CheckInData checkIn) {
-        List<LayoutBlock> inputBlocks = checkIn.getQuestions().stream()
+    public void openCheckInAnswersView(String triggerId, String userId, String responseUrl, CheckInHistoryEntity history) {
+        List<LayoutBlock> inputBlocks = history.getCheckInQuestionInHistory().stream()
                 .map(q ->
                         Blocks.input(input -> input
                                 .blockId(q.getUuid().toString())
-                                .element(BlockElements.plainTextInput(pi -> pi.actionId("answer_" + q.hashCode())))
-                                .label(PlainTextObject.builder().text(q.getText()).build())
+                                .element(BlockElements.plainTextInput(pi -> {
+                                    Optional<CheckInAnswerEntity> answer = q.getCheckInAnswers().stream()
+                                            .filter(a -> userId.equals(a.getUserId()))
+                                            .findFirst();
+                                    String answerUuid = answer.isPresent() ? answer.get().getUuid().toString() : UUID.randomUUID().toString();
+                                    pi.actionId(answerUuid);
+                                    pi.initialValue(answer.isPresent() ? answer.get().getAnswer() : "");
+                                    return pi;
+                                }))
+                                .label(PlainTextObject.builder().text(q.getCheckInQuestion().getQuestion()).build())
                         )
                 )
                 .collect(Collectors.toList());
@@ -88,11 +108,14 @@ public class SlackApiService {
         var view = View.builder()
                 .type("modal")
                 .callbackId("survey_submission")
-                .title(ViewTitle.builder().type(PLAIN_TEXT_TYPE).text(checkIn.getName()).build())
+                .title(ViewTitle.builder().type(PLAIN_TEXT_TYPE).text(history.getCheckIn().getName()).build())
                 .submit(ViewSubmit.builder().type(PLAIN_TEXT_TYPE).text("Submit").build())
                 .close(ViewClose.builder().type(PLAIN_TEXT_TYPE).text("Cancel").build())
                 .blocks(inputBlocks)
-                .privateMetadata(checkIn.getUuid().toString())
+                .privateMetadata(objectMapper.writeValueAsString(CheckInSubmissionMeta.builder()
+                        .responseUrl(responseUrl)
+                        .historyUuid(history.getCheckIn().getUuid())
+                        .build()))
                 .build();
         ViewsOpenResponse response = slack.methods(slackBotToken).viewsOpen(
                 ViewsOpenRequest.builder()
@@ -100,6 +123,28 @@ public class SlackApiService {
                         .view(view)
                         .build()
         );
+        log.info(response.toString());
+    }
+
+    @SneakyThrows
+    public void sendActionResponse(String userId, String responseUrl, String outroMessage) {
+        log.info("Sending ephemeral message to user {}", userId);
+
+        List<LayoutBlock> blocks = List.of(
+                Blocks.section(section -> section.text(BlockCompositions.markdownText(outroMessage))),
+                Blocks.actions(actions -> actions
+                        .elements(List.of(
+                                BlockElements.button(b -> b
+                                        .text(BlockCompositions.plainText("Edit"))
+                                        .actionId(FINISH_CHECK_IN.name())
+                                        .value("finish"))
+                        ))
+                )
+        );
+        actionResponseSender.send(responseUrl, ActionResponse.builder()
+                .replaceOriginal(true)
+                .blocks(blocks)
+                .build());
     }
 
     private List<User> getAllUsers() throws SlackApiException, IOException {
