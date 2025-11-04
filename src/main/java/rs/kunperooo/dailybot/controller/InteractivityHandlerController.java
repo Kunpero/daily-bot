@@ -1,10 +1,10 @@
 package rs.kunperooo.dailybot.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.slack.api.app_backend.dialogs.payload.PayloadTypeDetector;
 import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
 import com.slack.api.app_backend.views.payload.ViewSubmissionPayload;
+import com.slack.api.model.view.ViewState;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -13,11 +13,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import rs.kunperooo.dailybot.service.CheckInInteractivityService;
+import rs.kunperooo.dailybot.service.dto.AnswerDto;
+import rs.kunperooo.dailybot.service.dto.SaveAnswersDto;
 import rs.kunperooo.dailybot.utils.ActionId;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -35,30 +40,50 @@ public class InteractivityHandlerController {
     @RequestMapping("/interactivity")
     public ResponseEntity<Void> interactivity(HttpServletRequest request) {
         String body = request.getReader().lines().collect(Collectors.joining());
-        body = URLDecoder.decode(body, StandardCharsets.UTF_8)
-                .replaceFirst("payload=", "");
+        body = URLDecoder.decode(body, StandardCharsets.UTF_8).replaceFirst("payload=", "");
 
         String type = TYPE_DETECTOR.detectType(body);
         if (BLOCK_ACTIONS_TYPE.equals(type)) {
             handleBlockActions(body);
         } else if (VIEW_SUBMISSION_TYPE.equals(type)) {
-
+            handleViewSubmission(body);
         }
         return ResponseEntity.ok().build();
     }
 
-    private void handleBlockActions(String body) throws JsonProcessingException {
+    private void handleBlockActions(String body) {
         BlockActionPayload payload = gson.fromJson(body, BlockActionPayload.class);
         List<BlockActionPayload.Action> actions = payload.getActions();
         ActionId actionId = ActionId.safeValueOf(actions.get(0).getActionId());
 
         if (actionId == ActionId.START_CHECK_IN) {
-            checkInInteractivityService.openCheckInAnswersView(payload.getTriggerId(), payload.getMessage().getMetadata().getEventPayload().get("checkInUuid").toString());
+            checkInInteractivityService.openCheckInAnswersView(payload.getTriggerId(), payload.getUser().getId(), payload.getMessage().getMetadata().getEventPayload().get("checkInHistoryUuid").toString());
         }
     }
 
-    private void handleViewSubmission(String body) throws JsonProcessingException {
+    private void handleViewSubmission(String body) {
         ViewSubmissionPayload payload = gson.fromJson(body, ViewSubmissionPayload.class);
-        String privateMetadata = payload.getView().getPrivateMetadata();
+
+        checkInInteractivityService.saveSubmittedForm(buildAnswerDto(payload));
+    }
+
+    private SaveAnswersDto buildAnswerDto(ViewSubmissionPayload payload) {
+        Map<String, Map<String, ViewState.Value>> submittedValues = payload.getView().getState().getValues();
+
+        List<AnswerDto> answers = new LinkedList<>();
+
+        for (Map.Entry<String, Map<String, ViewState.Value>> entry : submittedValues.entrySet()) {
+            AnswerDto answer = AnswerDto.builder()
+                    .questionInHistoryUuid(UUID.fromString(entry.getKey()))
+                    .uuid(UUID.fromString(entry.getValue().entrySet().stream().findFirst().get().getKey()))
+                    .answer(entry.getValue().entrySet().stream().findFirst().get().getValue().getValue()).build();
+            answers.add(answer);
+        }
+
+        return SaveAnswersDto.builder()
+                .userId(payload.getUser().getId())
+                .callbackId(payload.getView().getCallbackId())
+                .answers(answers)
+                .build();
     }
 }

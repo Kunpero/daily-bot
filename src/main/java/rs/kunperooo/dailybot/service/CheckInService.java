@@ -6,6 +6,8 @@ import rs.kunperooo.dailybot.controller.dto.CheckInData;
 import rs.kunperooo.dailybot.controller.dto.MemberDto;
 import rs.kunperooo.dailybot.controller.dto.QuestionDto;
 import rs.kunperooo.dailybot.controller.dto.Schedule;
+import rs.kunperooo.dailybot.entity.CheckInHistoryEntity;
+import rs.kunperooo.dailybot.service.dto.SaveAnswersDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,4 +27,8 @@ public interface CheckInService {
     void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, List<QuestionDto> questions, List<MemberDto> members, Schedule schedule);
 
     void deleteCheckIn(UUID uuid, String owner);
+
+    void saveOrUpdateAnswers(SaveAnswersDto dto);
+
+    Optional<CheckInHistoryEntity> findHistoryByUuid(UUID uuid);
 }

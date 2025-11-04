@@ -11,12 +11,19 @@ import rs.kunperooo.dailybot.controller.dto.CheckInData;
 import rs.kunperooo.dailybot.controller.dto.MemberDto;
 import rs.kunperooo.dailybot.controller.dto.QuestionDto;
 import rs.kunperooo.dailybot.controller.dto.Schedule;
+import rs.kunperooo.dailybot.entity.CheckInAnswerEntity;
 import rs.kunperooo.dailybot.entity.CheckInEntity;
+import rs.kunperooo.dailybot.entity.CheckInHistoryEntity;
 import rs.kunperooo.dailybot.entity.CheckInNotificationScheduleEntity;
 import rs.kunperooo.dailybot.entity.CheckInQuestionEntity;
+import rs.kunperooo.dailybot.entity.CheckInQuestionInHistoryEntity;
+import rs.kunperooo.dailybot.repository.CheckInAnswerRepository;
+import rs.kunperooo.dailybot.repository.CheckInHistoryRepository;
 import rs.kunperooo.dailybot.repository.CheckInNotificationScheduleRepository;
+import rs.kunperooo.dailybot.repository.CheckInQuestionInHistoryRepository;
 import rs.kunperooo.dailybot.repository.CheckInQuestionRepository;
 import rs.kunperooo.dailybot.repository.CheckInRepository;
+import rs.kunperooo.dailybot.service.dto.SaveAnswersDto;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -40,6 +47,9 @@ public class RelationalDbCheckInService implements CheckInService {
     private final CheckInRepository checkInRepository;
     private final CheckInQuestionRepository checkInQuestionRepository;
     private final CheckInNotificationScheduleRepository scheduleRepository;
+    private final CheckInAnswerRepository checkInAnswerRepository;
+    private final CheckInHistoryRepository checkInHistoryRepository;
+    private final CheckInQuestionInHistoryRepository checkInQuestionInHistoryRepository;
 
     public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, @NonNull List<MemberDto> members, Schedule schedule) {
         log.info("Creating new check-in for owner: {} with name: {} and {} questions",
@@ -152,6 +162,31 @@ public class RelationalDbCheckInService implements CheckInService {
 
         checkInRepository.deleteByUuid(uuid);
         log.info("Check-in deleted successfully");
+    }
+
+    @Override
+    public void saveOrUpdateAnswers(SaveAnswersDto dto) {
+        List<CheckInAnswerEntity> answers = dto.getAnswers().stream()
+                .map(a -> {
+                    CheckInQuestionInHistoryEntity questionInHistory = checkInQuestionInHistoryRepository.findByUuid(a.getQuestionInHistoryUuid());
+                    CheckInAnswerEntity answer = checkInAnswerRepository.findByUuid(a.getUuid());
+
+                    return CheckInAnswerEntity.builder()
+                            .id(answer != null ? answer.getId() : null)
+                            .uuid(answer != null ? answer.getUuid() : java.util.UUID.randomUUID())
+                            .userId(dto.getUserId())
+                            .checkInQuestionInHistory(questionInHistory)
+                            .answer(a.getAnswer())
+                            .build();
+                })
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+        checkInAnswerRepository.saveAll(answers);
+    }
+
+    @Override
+    public Optional<CheckInHistoryEntity> findHistoryByUuid(UUID uuid) {
+        return checkInHistoryRepository.findByUuid(uuid);
     }
 
     private void saveSchedule(CheckInEntity checkIn, Schedule schedule) {
