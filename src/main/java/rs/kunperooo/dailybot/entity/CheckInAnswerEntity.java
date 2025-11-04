@@ -35,7 +35,7 @@ public class CheckInAnswerEntity {
     @Column(name = "answer", updatable = true)
     private String answer;
 
-    @ManyToOne(targetEntity = CheckInQuestionEntity.class)
-    @JoinColumn(name = "question_id")
-    private CheckInQuestionEntity checkInQuestion;
+    @ManyToOne(targetEntity = CheckInQuestionInHistoryEntity.class)
+    @JoinColumn(name = "check_in_question_in_history_id", nullable = false)
+    private CheckInQuestionInHistoryEntity checkInQuestionInHistory;
 }

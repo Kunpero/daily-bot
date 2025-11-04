@@ -45,17 +45,50 @@ CREATE TABLE CHECK_IN_QUESTION
     UNIQUE (check_in_id, order_number)
 );
 
-CREATE TABLE CHECK_IN_ANSWER
+CREATE TABLE check_in_history
 (
     id            BIGSERIAL PRIMARY KEY,
     uuid          VARCHAR(36) unique NOT NULL,
-    user_id       VARCHAR(50)       NOT NULL,
-    question_id   BIGSERIAL,
-    answer        TEXT,
-    CONSTRAINT CHECK_IN_QUESTION_ID_FK FOREIGN KEY (question_id)
-        REFERENCES CHECK_IN_QUESTION (id)
+    check_in_id   BIGSERIAL          NOT NULL,
+    created_at    TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT CHECK_IN_HISTORY_CHECK_IN_ID_FK FOREIGN KEY (check_in_id)
+        REFERENCES check_in (id)
 );
-CREATE INDEX idx_check_question_id ON CHECK_IN_ANSWER (question_id);
+
+CREATE INDEX idx_check_in_history_check_in_id ON check_in_history (check_in_id);
+CREATE INDEX idx_check_in_history_uuid ON check_in_history (uuid);
+
+CREATE TABLE check_in_question_in_history
+(
+    id                     BIGSERIAL PRIMARY KEY,
+    uuid                   VARCHAR(36) unique NOT NULL,
+    check_in_history_id    BIGSERIAL          NOT NULL,
+    check_in_question_id   BIGSERIAL          NOT NULL,
+    CONSTRAINT CHECK_IN_QUESTION_IN_HISTORY_HISTORY_ID_FK FOREIGN KEY (check_in_history_id)
+        REFERENCES check_in_history (id),
+    CONSTRAINT CHECK_IN_QUESTION_IN_HISTORY_QUESTION_ID_FK FOREIGN KEY (check_in_question_id)
+        REFERENCES CHECK_IN_QUESTION (id),
+    UNIQUE (check_in_history_id, check_in_question_id)
+);
+
+CREATE INDEX idx_check_in_question_in_history_history_id ON check_in_question_in_history (check_in_history_id);
+CREATE INDEX idx_check_in_question_in_history_question_id ON check_in_question_in_history (check_in_question_id);
+
+CREATE TABLE CHECK_IN_ANSWER
+(
+    id                              BIGSERIAL PRIMARY KEY,
+    uuid                            VARCHAR(36) unique NOT NULL,
+    user_id                         VARCHAR(50)       NOT NULL,
+    check_in_history_id             BIGSERIAL          NOT NULL,
+    check_in_question_in_history_id BIGSERIAL          NOT NULL,
+    answer                          TEXT,
+    CONSTRAINT CHECK_IN_ANSWER_HISTORY_ID_FK FOREIGN KEY (check_in_history_id)
+        REFERENCES check_in_history (id),
+    CONSTRAINT CHECK_IN_ANSWER_QUESTION_IN_HISTORY_ID_FK FOREIGN KEY (check_in_question_in_history_id)
+        REFERENCES check_in_question_in_history (id)
+);
+CREATE INDEX idx_check_in_answer_history_id ON CHECK_IN_ANSWER (check_in_history_id);
+CREATE INDEX idx_check_in_answer_question_in_history_id ON CHECK_IN_ANSWER (check_in_question_in_history_id);
 
 CREATE TABLE check_in_notification_schedule
 (
@@ -122,6 +155,24 @@ COMMENT
 ON COLUMN check_in_notification_schedule.week_days IS 'JSON array of week days (e.g., ["MONDAY", "TUESDAY"])';
 
 COMMENT
+ON TABLE check_in_history IS 'Stores history of check-in executions';
+COMMENT
+ON COLUMN check_in_history.uuid IS 'UUID of the check-in history entry';
+COMMENT
+ON COLUMN check_in_history.check_in_id IS 'Reference to check_in table';
+COMMENT
+ON COLUMN check_in_history.created_at IS 'Timestamp when the check-in history entry was created';
+
+COMMENT
+ON TABLE check_in_question_in_history IS 'Many-to-many link between check_in_history and check_in_question';
+COMMENT
+ON COLUMN check_in_question_in_history.uuid IS 'UUID of the check-in question in history entry';
+COMMENT
+ON COLUMN check_in_question_in_history.check_in_history_id IS 'Reference to check_in_history table';
+COMMENT
+ON COLUMN check_in_question_in_history.check_in_question_id IS 'Reference to CHECK_IN_QUESTION table';
+
+COMMENT
 ON TABLE CHECK_IN_ANSWER IS 'Stores check-in answers to questions';
 COMMENT
 ON COLUMN CHECK_IN_ANSWER.user_id IS 'Slack userid of a respondent';
@@ -129,3 +180,7 @@ COMMENT
 ON COLUMN CHECK_IN_ANSWER.uuid IS 'UUID of the answer';
 COMMENT
 ON COLUMN CHECK_IN_ANSWER.answer IS 'Text representation of an answer';
+COMMENT
+ON COLUMN CHECK_IN_ANSWER.check_in_history_id IS 'Reference to check_in_history table';
+COMMENT
+ON COLUMN CHECK_IN_ANSWER.check_in_question_in_history_id IS 'Reference to check_in_question_in_history table';

@@ -5,8 +5,11 @@ import org.springframework.stereotype.Repository;
 import rs.kunperooo.dailybot.entity.CheckInQuestionEntity;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface CheckInQuestionRepository extends JpaRepository<CheckInQuestionEntity, Long> {
     List<CheckInQuestionEntity> getAllByCheckInIdAndIsActiveTrue(Long checkInId);
+
+    CheckInQuestionEntity findByUuid(UUID uuid);
 }
