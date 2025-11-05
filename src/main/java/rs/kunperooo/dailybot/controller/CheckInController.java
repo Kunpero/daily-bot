@@ -18,14 +18,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import rs.kunperooo.dailybot.controller.dto.CheckInDataRest;
 import rs.kunperooo.dailybot.controller.dto.CheckInFormData;
-import rs.kunperooo.dailybot.controller.dto.CheckInData;
+import rs.kunperooo.dailybot.controller.dto.SlackUserRest;
 import rs.kunperooo.dailybot.service.CheckInService;
 import rs.kunperooo.dailybot.service.SlackApiService;
-import rs.kunperooo.dailybot.service.dto.SlackUserDto;
+import rs.kunperooo.dailybot.utils.Converter;
 
 import java.util.List;
 import java.util.UUID;
+
+import static rs.kunperooo.dailybot.utils.Converter.convertToDto;
+import static rs.kunperooo.dailybot.utils.Converter.convertToListRest;
 
 @Controller
 @RequestMapping("/checkin")
@@ -54,14 +58,14 @@ public class CheckInController {
                 : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<CheckInData> checkInPage;
+        Page<CheckInDataRest> checkInPage;
 
         if (owner != null && !owner.trim().isEmpty()) {
-            checkInPage = checkInService.findByOwner(owner, pageable);
+            checkInPage = Converter.convertToRest(checkInService.findByOwner(owner, pageable));
         } else {
             // For admin, we need to get all check-ins - this would need a different service method
             // For now, we'll use a workaround by getting all check-ins and paginating manually
-            List<CheckInData> allCheckIns = checkInService.findAll();
+            List<CheckInDataRest> allCheckIns = Converter.convertToRest(checkInService.findAll());
             checkInPage = createPageFromList(allCheckIns, pageable);
         }
 
@@ -81,7 +85,7 @@ public class CheckInController {
     public String viewCheckIn(@PathVariable UUID uuid, Model model) {
         log.debug("Viewing check-in with ID: {}", uuid);
 
-        CheckInData checkInForm = checkInService.findByUuid(uuid)
+        CheckInDataRest checkInForm = Converter.convertToRest(checkInService.findByUuid(uuid))
                 .orElseThrow(() -> new RuntimeException("Check-in not found with ID: " + uuid));
 
         model.addAttribute("checkInForm", checkInForm);
@@ -94,7 +98,7 @@ public class CheckInController {
 
         CheckInFormData checkInForm = CheckInFormData.builder()
                 .build();
-        List<SlackUserDto> activeUsers = slackApiService.getActiveUsers();
+        List<SlackUserRest> activeUsers = convertToListRest(slackApiService.getActiveUsers());
 
         model.addAttribute("checkInForm", checkInForm);
         model.addAttribute("isEdit", false);
@@ -106,9 +110,9 @@ public class CheckInController {
     public String showEditForm(@PathVariable UUID uuid, Model model) {
         log.debug("Showing edit form for check-in ID: {}", uuid);
 
-        CheckInData checkInForm = checkInService.findByUuid(uuid)
+        CheckInDataRest checkInForm = Converter.convertToRest(checkInService.findByUuid(uuid))
                 .orElseThrow(() -> new RuntimeException("Check-in not found with ID: " + uuid));
-        List<SlackUserDto> activeUsers = slackApiService.getActiveUsers();
+        List<SlackUserRest> activeUsers = convertToListRest(slackApiService.getActiveUsers());
 
         model.addAttribute("checkInForm", checkInForm);
         model.addAttribute("isEdit", true);
@@ -135,7 +139,7 @@ public class CheckInController {
                     checkInForm.getOutroMessage(),
                     checkInForm.getQuestions(),
                     checkInForm.getMembers(),
-                    checkInForm.getSchedule()
+                    convertToDto(checkInForm.getSchedule())
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Check-in created successfully!");
@@ -168,7 +172,7 @@ public class CheckInController {
                     checkInForm.getOutroMessage(),
                     checkInForm.getQuestions(),
                     checkInForm.getMembers(),
-                    checkInForm.getSchedule()
+                    convertToDto(checkInForm.getSchedule())
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Check-in updated successfully!");
@@ -202,7 +206,7 @@ public class CheckInController {
     /**
      * Helper method to create a Page from a List (for admin view)
      */
-    private Page<CheckInData> createPageFromList(List<CheckInData> list, Pageable pageable) {
+    private Page<CheckInDataRest> createPageFromList(List<CheckInDataRest> list, Pageable pageable) {
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), list.size());
 
@@ -210,7 +214,7 @@ public class CheckInController {
             return Page.empty(pageable);
         }
 
-        List<CheckInData> pageContent = list.subList(start, end);
+        List<CheckInDataRest> pageContent = list.subList(start, end);
         return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, list.size());
     }
 }

@@ -8,10 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import rs.kunperooo.dailybot.controller.dto.CheckInData;
-import rs.kunperooo.dailybot.controller.dto.MemberDto;
-import rs.kunperooo.dailybot.controller.dto.QuestionDto;
-import rs.kunperooo.dailybot.controller.dto.Schedule;
 import rs.kunperooo.dailybot.entity.CheckInAnswerEntity;
 import rs.kunperooo.dailybot.entity.CheckInEntity;
 import rs.kunperooo.dailybot.entity.CheckInHistoryEntity;
@@ -24,7 +20,12 @@ import rs.kunperooo.dailybot.repository.CheckInNotificationScheduleRepository;
 import rs.kunperooo.dailybot.repository.CheckInQuestionInHistoryRepository;
 import rs.kunperooo.dailybot.repository.CheckInQuestionRepository;
 import rs.kunperooo.dailybot.repository.CheckInRepository;
+import rs.kunperooo.dailybot.service.dto.CheckInDataDto;
+import rs.kunperooo.dailybot.service.dto.MemberDto;
+import rs.kunperooo.dailybot.service.dto.QuestionDto;
 import rs.kunperooo.dailybot.service.dto.SaveAnswersDto;
+import rs.kunperooo.dailybot.service.dto.ScheduleDto;
+import rs.kunperooo.dailybot.utils.Converter;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -34,9 +35,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static rs.kunperooo.dailybot.utils.Converter.convert;
-import static rs.kunperooo.dailybot.utils.Converter.convertCheckIns;
-import static rs.kunperooo.dailybot.utils.Converter.convertMemberDtos;
+import static rs.kunperooo.dailybot.utils.Converter.convertToDtoList;
+import static rs.kunperooo.dailybot.utils.Converter.convertToMemberEntityList;
 import static rs.kunperooo.dailybot.utils.ScheduleUtils.calculateNextExecution;
 
 @Service
@@ -53,7 +53,7 @@ public class RelationalDbCheckInService implements CheckInService {
     private final CheckInQuestionInHistoryRepository checkInQuestionInHistoryRepository;
     private final CheckInNotificationScheduleRepository checkInNotificationScheduleRepository;
 
-    public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, @NonNull List<MemberDto> members, Schedule schedule) {
+    public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, @NonNull List<MemberDto> members, ScheduleDto schedule) {
         log.info("Creating new check-in for owner: {} with name: {} and {} questions",
                 owner, name, questions);
 
@@ -65,9 +65,9 @@ public class RelationalDbCheckInService implements CheckInService {
                 .outroMessage(outroMessage)
                 .creationDate(LocalDateTime.now())
                 .lastUpdateDate(LocalDateTime.now())
-                .members(convertMemberDtos(members))
+                .members(convertToMemberEntityList(members))
                 .build();
-        for (CheckInQuestionEntity question : convert(questions)) {
+        for (CheckInQuestionEntity question : Converter.convertToEntityList(questions)) {
             checkIn.addQuestion(question);
         }
 
@@ -80,19 +80,19 @@ public class RelationalDbCheckInService implements CheckInService {
     }
 
     @Transactional(readOnly = true)
-    public List<CheckInData> findByOwner(String owner) {
+    public List<CheckInDataDto> findByOwner(String owner) {
         log.debug("Finding all check-ins for owner: {}", owner);
-        return convertCheckIns(checkInRepository.findByOwner(owner));
+        return convertToDtoList(checkInRepository.findByOwner(owner));
     }
 
     @Transactional(readOnly = true)
-    public List<CheckInData> findAll() {
+    public List<CheckInDataDto> findAll() {
         log.debug("Finding all check-ins");
-        return convertCheckIns(checkInRepository.findAll());
+        return convertToDtoList(checkInRepository.findAll());
     }
 
     @Transactional(readOnly = true)
-    public Optional<CheckInData> findByUuid(UUID uuid) {
+    public Optional<CheckInDataDto> findByUuid(UUID uuid) {
         log.debug("Finding check-in by ID: {}", uuid);
         Optional<CheckInEntity> checkIn = checkInRepository.findByUuid(uuid);
         List<CheckInQuestionEntity> activeQuestions;
@@ -100,16 +100,16 @@ public class RelationalDbCheckInService implements CheckInService {
             activeQuestions = checkInQuestionRepository.getAllByCheckInIdAndIsActiveTrue(checkIn.get().getId());
             checkIn.get().setCheckInQuestions(activeQuestions);
         }
-        return convert(checkIn);
+        return Converter.convertToDto(checkIn);
     }
 
     @Transactional(readOnly = true)
-    public Page<CheckInData> findByOwner(String owner, Pageable pageable) {
+    public Page<CheckInDataDto> findByOwner(String owner, Pageable pageable) {
         log.debug("Finding check-ins for owner: {} with pagination", owner);
-        return convert(checkInRepository.findByOwner(owner, pageable));
+        return Converter.convertToDtoPage(checkInRepository.findByOwner(owner, pageable));
     }
 
-    public void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, List<MemberDto> members, Schedule schedule) {
+    public void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, List<MemberDto> members, ScheduleDto schedule) {
         log.info("Updating check-in for ID: {} and owner: {} with name: {} and {} questions",
                 uuid, owner, name, questions);
 
@@ -141,13 +141,13 @@ public class RelationalDbCheckInService implements CheckInService {
         updatedQuestions.addAll(deactivatedQuestions);
 
         checkIn.setCheckInQuestions(updatedQuestions);
-        checkIn.setMembers(convertMemberDtos(members));
+        checkIn.setMembers(convertToMemberEntityList(members));
         checkIn.setLastUpdateDate(LocalDateTime.now());
 
         CheckInNotificationScheduleEntity scheduleEntity = checkIn.getNotificationSchedule()
                 .setStartDate(schedule.getStartDate())
                 .setTime(schedule.getTime())
-                .setTimezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null)
+                .setTimezone(schedule.getTimezone())
                 .setFrequency(schedule.getFrequency())
                 .setWeekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>())
                 .setUpdatedAt(LocalDateTime.now());
@@ -192,12 +192,12 @@ public class RelationalDbCheckInService implements CheckInService {
     }
 
     @Override
-    public List<CheckInData> findByNextExecutionIsBefore(ZonedDateTime nextExecutionBefore, Pageable pageable) {
-        return checkInNotificationScheduleRepository.findByNextExecutionIsBefore(nextExecutionBefore, pageable).stream().map(n -> convert(n.getCheckIn())).toList();
+    public List<CheckInDataDto> findByNextExecutionIsBefore(ZonedDateTime nextExecutionBefore, Pageable pageable) {
+        return checkInNotificationScheduleRepository.findByNextExecutionIsBefore(nextExecutionBefore, pageable).stream().map(n -> Converter.convertToDto(n.getCheckIn())).toList();
     }
 
     @NotNull
-    public UUID saveHistory(CheckInData checkIn) {
+    public UUID saveHistory(CheckInDataDto checkIn) {
         CheckInEntity checkInEntity = checkInRepository.findByUuid(checkIn.getUuid()).get();
         UUID historyUuid = UUID.randomUUID();
         List<CheckInQuestionInHistoryEntity> questionsInHistory = checkInEntity.getCheckInQuestions().stream()
@@ -228,7 +228,7 @@ public class RelationalDbCheckInService implements CheckInService {
         checkInNotificationScheduleRepository.save(schedule);
     }
 
-    private void saveSchedule(CheckInEntity checkIn, Schedule schedule) {
+    private void saveSchedule(CheckInEntity checkIn, ScheduleDto schedule) {
         if (schedule.getStartDate() == null) {
             log.debug("Skipping schedule save - startDate is null");
             return;
@@ -240,7 +240,7 @@ public class RelationalDbCheckInService implements CheckInService {
                 .checkIn(checkIn)
                 .startDate(schedule.getStartDate())
                 .time(schedule.getTime())
-                .timezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null)
+                .timezone(schedule.getTimezone())
                 .frequency(schedule.getFrequency())
                 .weekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>())
                 .nextExecution(nextExecution)
@@ -252,7 +252,7 @@ public class RelationalDbCheckInService implements CheckInService {
         log.info("Schedule saved for check-in ID: {} with next execution at: {}", checkIn.getId(), nextExecution);
     }
 
-    private void updateSchedule(CheckInEntity checkIn, Schedule schedule) {
+    private void updateSchedule(CheckInEntity checkIn, ScheduleDto schedule) {
         Optional<CheckInNotificationScheduleEntity> existingSchedule = scheduleRepository.findByCheckInId(checkIn.getId())
                 .stream()
                 .findFirst();
@@ -272,7 +272,7 @@ public class RelationalDbCheckInService implements CheckInService {
             scheduleEntity = existingSchedule.get();
             scheduleEntity.setStartDate(schedule.getStartDate());
             scheduleEntity.setTime(schedule.getTime());
-            scheduleEntity.setTimezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null);
+            scheduleEntity.setTimezone(schedule.getTimezone());
             scheduleEntity.setFrequency(schedule.getFrequency());
             scheduleEntity.setWeekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>());
             scheduleEntity.setNextExecution(calculateNextExecution(schedule));
@@ -284,7 +284,7 @@ public class RelationalDbCheckInService implements CheckInService {
                     .checkIn(checkIn)
                     .startDate(schedule.getStartDate())
                     .time(schedule.getTime())
-                    .timezone(schedule.getTimezone() != null ? schedule.getTimezone().getId() : null)
+                    .timezone(schedule.getTimezone())
                     .frequency(schedule.getFrequency())
                     .weekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>())
                     .nextExecution(calculateNextExecution(schedule))

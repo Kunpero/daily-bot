@@ -1,7 +1,8 @@
 package rs.kunperooo.dailybot.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import rs.kunperooo.dailybot.controller.dto.Schedule;
+import rs.kunperooo.dailybot.controller.dto.ScheduleRest;
+import rs.kunperooo.dailybot.service.dto.ScheduleDto;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -15,7 +16,7 @@ import java.util.TreeSet;
 
 @Slf4j
 public class ScheduleUtils {
-    public static ZonedDateTime calculateNextExecution(Schedule schedule) {
+    public static ZonedDateTime calculateNextExecution(ScheduleDto schedule) {
         if (schedule.getStartDate() == null || schedule.getTime() == null || schedule.getTimezone() == null) {
             log.debug("Cannot calculate next execution - missing required fields");
             return null;
@@ -28,7 +29,7 @@ public class ScheduleUtils {
 
         LocalDate startDate = schedule.getStartDate();
         LocalTime time = schedule.getTime();
-        ZoneId timezone = schedule.getTimezone();
+        ZoneId timezone = ZoneId.of(schedule.getTimezone());
         List<DayOfWeek> weekDays = schedule.getDays();
 
         // Get current date/time in the schedule's timezone

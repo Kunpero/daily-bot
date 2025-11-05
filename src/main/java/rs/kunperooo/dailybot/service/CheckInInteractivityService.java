@@ -3,7 +3,7 @@ package rs.kunperooo.dailybot.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import rs.kunperooo.dailybot.controller.dto.CheckInData;
+import rs.kunperooo.dailybot.service.dto.CheckInDataDto;
 import rs.kunperooo.dailybot.entity.CheckInHistoryEntity;
 import rs.kunperooo.dailybot.service.dto.SaveAnswersDto;
 
@@ -26,7 +26,7 @@ public class CheckInInteractivityService {
 
     public void saveSubmittedForm(SaveAnswersDto dto) {
         log.info("Saving submitted check in form");
-        Optional<CheckInData> checkIn = checkInService.findByUuid(dto.getCheckInUuid());
+        Optional<CheckInDataDto> checkIn = checkInService.findByUuid(dto.getCheckInUuid());
         checkInService.saveOrUpdateAnswers(dto);
 
         slackApiService.sendActionResponse(dto.getUserId(), dto.getResponseUrl(), checkIn.get().getOutroMessage());

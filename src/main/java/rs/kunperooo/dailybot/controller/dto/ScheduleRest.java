@@ -1,6 +1,5 @@
 package rs.kunperooo.dailybot.controller.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,17 +9,17 @@ import rs.kunperooo.dailybot.entity.Frequency;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RestSchedule {
-    @JsonFormat(pattern = "yyyy-MM-dd")
+public class ScheduleRest {
     private LocalDate startDate;
     private LocalTime time;
-    private String timezone;
+    private ZoneId timezone;
     private Frequency frequency;
     private List<DayOfWeek> days;
 }

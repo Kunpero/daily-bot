@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class CheckInData {
+public class CheckInDataRest {
     private UUID uuid;
 
     private String owner;
@@ -24,9 +24,9 @@ public class CheckInData {
 
     private String outroMessage;
 
-    private List<QuestionDto> questions;
+    private List<QuestionRest> questions;
 
-    private List<MemberDto> members;
+    private List<MemberRest> members;
 
-    private RestSchedule schedule;
+    private ScheduleRest schedule;
 }
