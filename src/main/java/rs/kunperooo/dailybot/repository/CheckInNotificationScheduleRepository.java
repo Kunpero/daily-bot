@@ -1,9 +1,11 @@
 package rs.kunperooo.dailybot.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import rs.kunperooo.dailybot.entity.CheckInNotificationScheduleEntity;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,5 +18,5 @@ public interface CheckInNotificationScheduleRepository extends JpaRepository<Che
 
     void deleteByCheckInId(Long checkInId);
 
-    List<CheckInNotificationScheduleEntity> findByNextExecutionIsNotNull();
+    List<CheckInNotificationScheduleEntity> findByNextExecutionIsBefore(ZonedDateTime nextExecutionBefore, Pageable pageable);
 }

@@ -3,6 +3,7 @@ package rs.kunperooo.dailybot.service;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,7 @@ public class RelationalDbCheckInService implements CheckInService {
     private final CheckInAnswerRepository checkInAnswerRepository;
     private final CheckInHistoryRepository checkInHistoryRepository;
     private final CheckInQuestionInHistoryRepository checkInQuestionInHistoryRepository;
+    private final CheckInNotificationScheduleRepository checkInNotificationScheduleRepository;
 
     public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, @NonNull List<MemberDto> members, Schedule schedule) {
         log.info("Creating new check-in for owner: {} with name: {} and {} questions",
@@ -187,6 +189,43 @@ public class RelationalDbCheckInService implements CheckInService {
     @Override
     public Optional<CheckInHistoryEntity> findHistoryByUuid(UUID uuid) {
         return checkInHistoryRepository.findByUuid(uuid);
+    }
+
+    @Override
+    public List<CheckInData> findByNextExecutionIsBefore(ZonedDateTime nextExecutionBefore, Pageable pageable) {
+        return checkInNotificationScheduleRepository.findByNextExecutionIsBefore(nextExecutionBefore, pageable).stream().map(n -> convert(n.getCheckIn())).toList();
+    }
+
+    @NotNull
+    public UUID saveHistory(CheckInData checkIn) {
+        CheckInEntity checkInEntity = checkInRepository.findByUuid(checkIn.getUuid()).get();
+        UUID historyUuid = UUID.randomUUID();
+        List<CheckInQuestionInHistoryEntity> questionsInHistory = checkInEntity.getCheckInQuestions().stream()
+                .map(q -> CheckInQuestionInHistoryEntity.builder()
+                        .uuid(UUID.randomUUID())
+                        .checkInQuestion(q)
+                        .build())
+                .toList();
+        CheckInHistoryEntity history = CheckInHistoryEntity.builder()
+                .checkIn(checkInEntity)
+                .createdAt(LocalDateTime.now())
+                .uuid(historyUuid)
+                .build();
+
+        for (CheckInQuestionInHistoryEntity q : questionsInHistory) {
+            history.addQuestionInHistory(q);
+        }
+        checkInHistoryRepository.save(history);
+        return historyUuid;
+    }
+
+    @Transactional
+    @Override
+    public void saveNextExecution(UUID checkInUuid, ZonedDateTime nextExecution) {
+        Optional<CheckInEntity> checkIn = checkInRepository.findByUuid(checkInUuid);
+        CheckInNotificationScheduleEntity schedule = checkIn.get().getNotificationSchedule();
+        schedule.setNextExecution(nextExecution);
+        checkInNotificationScheduleRepository.save(schedule);
     }
 
     private void saveSchedule(CheckInEntity checkIn, Schedule schedule) {

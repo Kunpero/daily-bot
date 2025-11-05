@@ -9,6 +9,7 @@ import rs.kunperooo.dailybot.controller.dto.Schedule;
 import rs.kunperooo.dailybot.entity.CheckInHistoryEntity;
 import rs.kunperooo.dailybot.service.dto.SaveAnswersDto;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,4 +32,10 @@ public interface CheckInService {
     void saveOrUpdateAnswers(SaveAnswersDto dto);
 
     Optional<CheckInHistoryEntity> findHistoryByUuid(UUID uuid);
+
+    List<CheckInData> findByNextExecutionIsBefore(ZonedDateTime nextExecutionBefore, Pageable pageable);
+
+    UUID saveHistory(CheckInData checkIn);
+
+    void saveNextExecution(UUID checkInUuid, ZonedDateTime nextExecution);
 }
