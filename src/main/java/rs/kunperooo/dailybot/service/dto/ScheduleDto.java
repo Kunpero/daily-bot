@@ -17,7 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ScheduleDto {
-    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
     private LocalTime time;
     private String timezone;

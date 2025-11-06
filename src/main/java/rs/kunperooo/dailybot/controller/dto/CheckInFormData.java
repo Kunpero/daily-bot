@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import rs.kunperooo.dailybot.service.dto.MemberDto;
+import rs.kunperooo.dailybot.service.dto.QuestionDto;
 
 import java.util.List;
 
@@ -19,9 +21,9 @@ public class CheckInFormData {
 
     private String outroMessage;
 
-    private List<QuestionDto> questions;
+    private List<QuestionRest> questions;
 
-    private List<MemberDto> members;
+    private List<MemberRest> members;
 
-    private Schedule schedule;
+    private ScheduleRest schedule;
 }

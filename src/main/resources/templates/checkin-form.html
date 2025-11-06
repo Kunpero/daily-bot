@@ -371,8 +371,7 @@
                                 <!-- Timezone -->
                                 <div class="mb-3">
                                     <label for="scheduleTimezone" class="form-label small">Timezone</label>
-                                    <select class="form-select" id="scheduleTimezone" th:field="*{schedule.timezone}">
-                                        <option value="">Select timezone...</option>
+                                    <select class="form-select" name="timezone" id="scheduleTimezone" th:field="*{schedule.timezone}">
                                         <option value="America/New_York">America/New_York (EST/EDT)</option>
                                         <option value="America/Chicago">America/Chicago (CST/CDT)</option>
                                         <option value="America/Denver">America/Denver (MST/MDT)</option>

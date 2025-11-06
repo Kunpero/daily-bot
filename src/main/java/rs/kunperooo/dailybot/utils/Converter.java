@@ -217,6 +217,40 @@ public class Converter {
                 .build();
     }
 
+    public static List<QuestionDto> convertToQuestionListDto(List<QuestionRest> questions) {
+        if (questions == null || questions.isEmpty()) {
+            return new LinkedList<>();
+        }
+        return questions.stream()
+                .map(Converter::convertToDto)
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static QuestionDto convertToDto(QuestionRest questionRest) {
+        return QuestionDto.builder()
+                .uuid(questionRest.getUuid())
+                .text(questionRest.getText())
+                .order(questionRest.getOrder())
+                .build();
+    }
+
+    public static List<MemberDto> convertToMemberListDto(List<MemberRest> members) {
+        if (members == null || members.isEmpty()) {
+            return new LinkedList<>();
+        }
+        return members.stream()
+                .map(Converter::convertToDto)
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static MemberDto convertToDto(MemberRest memberRest) {
+        return MemberDto.builder()
+                .id(memberRest.getId())
+                .realName(memberRest.getRealName())
+                .imageUrl(memberRest.getImageUrl())
+                .build();
+    }
+
     public static SlackUserRest convertToRest(SlackUserDto slackUserDto) {
         return SlackUserRest.builder()
                 .id(slackUserDto.getId())

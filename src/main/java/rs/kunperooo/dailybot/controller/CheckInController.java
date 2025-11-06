@@ -30,6 +30,8 @@ import java.util.UUID;
 
 import static rs.kunperooo.dailybot.utils.Converter.convertToDto;
 import static rs.kunperooo.dailybot.utils.Converter.convertToListRest;
+import static rs.kunperooo.dailybot.utils.Converter.convertToMemberListDto;
+import static rs.kunperooo.dailybot.utils.Converter.convertToQuestionListDto;
 
 @Controller
 @RequestMapping("/checkin")
@@ -137,8 +139,8 @@ public class CheckInController {
                     checkInForm.getName(),
                     checkInForm.getIntroMessage(),
                     checkInForm.getOutroMessage(),
-                    checkInForm.getQuestions(),
-                    checkInForm.getMembers(),
+                    convertToQuestionListDto(checkInForm.getQuestions()),
+                    convertToMemberListDto(checkInForm.getMembers()),
                     convertToDto(checkInForm.getSchedule())
             );
 
@@ -170,8 +172,8 @@ public class CheckInController {
                     checkInForm.getName(),
                     checkInForm.getIntroMessage(),
                     checkInForm.getOutroMessage(),
-                    checkInForm.getQuestions(),
-                    checkInForm.getMembers(),
+                    convertToQuestionListDto(checkInForm.getQuestions()),
+                    convertToMemberListDto(checkInForm.getMembers()),
                     convertToDto(checkInForm.getSchedule())
             );
 
