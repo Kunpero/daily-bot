@@ -2,8 +2,8 @@ package rs.kunperooo.dailybot.utils;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import rs.kunperooo.dailybot.controller.dto.Schedule;
 import rs.kunperooo.dailybot.entity.Frequency;
+import rs.kunperooo.dailybot.service.dto.ScheduleDto;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -32,10 +32,10 @@ class ScheduleUtilsTest {
     @DisplayName("Should return null when startDate is null")
     void testCalculateNextExecution_NullStartDate() {
         // Arrange
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(null)
                 .time(LocalTime.of(10, 0))
-                .timezone(ZoneId.systemDefault())
+                .timezone(ZoneId.systemDefault().getId())
                 .days(List.of(DayOfWeek.MONDAY))
                 .build();
 
@@ -50,10 +50,10 @@ class ScheduleUtilsTest {
     @DisplayName("Should return null when time is null")
     void testCalculateNextExecution_NullTime() {
         // Arrange
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(LocalDate.now())
                 .time(null)
-                .timezone(ZoneId.systemDefault())
+                .timezone(ZoneId.systemDefault().getId())
                 .days(List.of(DayOfWeek.MONDAY))
                 .build();
 
@@ -68,7 +68,7 @@ class ScheduleUtilsTest {
     @DisplayName("Should return null when timezone is null")
     void testCalculateNextExecution_NullTimezone() {
         // Arrange
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(LocalDate.now())
                 .time(LocalTime.of(10, 0))
                 .timezone(null)
@@ -86,10 +86,10 @@ class ScheduleUtilsTest {
     @DisplayName("Should return null when days list is null")
     void testCalculateNextExecution_NullDaysList() {
         // Arrange
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(LocalDate.now())
                 .time(LocalTime.of(10, 0))
-                .timezone(ZoneId.systemDefault())
+                .timezone(ZoneId.systemDefault().getId())
                 .days(null)
                 .build();
 
@@ -104,10 +104,10 @@ class ScheduleUtilsTest {
     @DisplayName("Should return null when days list is empty")
     void testCalculateNextExecution_EmptyDaysList() {
         // Arrange
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(LocalDate.now())
                 .time(LocalTime.of(10, 0))
-                .timezone(ZoneId.systemDefault())
+                .timezone(ZoneId.systemDefault().getId())
                 .days(Collections.emptyList())
                 .build();
 
@@ -122,15 +122,15 @@ class ScheduleUtilsTest {
     @DisplayName("Should return next execution when startDate is today and time is in future")
     void testCalculateNextExecution_StartDateToday_TimeInFuture() {
         // Arrange
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.of(2025, 11, 6);
         LocalTime futureTime = LocalTime.now().plusHours(2);
         ZoneId timezone = ZoneId.systemDefault();
         DayOfWeek todayDayOfWeek = today.getDayOfWeek();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(today)
                 .time(futureTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(todayDayOfWeek))
                 .build();
 
@@ -139,7 +139,7 @@ class ScheduleUtilsTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(today, result.toLocalDate());
+        assertEquals(LocalDate.of(2025, 11, 13), result.toLocalDate());
         assertEquals(futureTime, result.toLocalTime());
         assertEquals(timezone, result.getZone());
     }
@@ -153,10 +153,10 @@ class ScheduleUtilsTest {
         ZoneId timezone = ZoneId.systemDefault();
         DayOfWeek todayDayOfWeek = today.getDayOfWeek();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(today.minusWeeks(1)) // Started in the past
                 .time(pastTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(todayDayOfWeek))
                 .build();
 
@@ -179,10 +179,10 @@ class ScheduleUtilsTest {
         ZoneId timezone = ZoneId.of("America/New_York");
         DayOfWeek futureDayOfWeek = futureDate.getDayOfWeek();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(futureDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(futureDayOfWeek))
                 .build();
 
@@ -204,10 +204,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(9, 0);
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY))
                 .build();
 
@@ -234,10 +234,10 @@ class ScheduleUtilsTest {
         DayOfWeek today = LocalDate.now().getDayOfWeek();
         DayOfWeek nextDay = today.plus(3); // 3 days from today
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(nextDay))
                 .build();
 
@@ -260,10 +260,10 @@ class ScheduleUtilsTest {
         ZoneId timezone = ZoneId.of("Europe/London");
         DayOfWeek targetDay = DayOfWeek.THURSDAY;
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(targetDay))
                 .build();
 
@@ -285,10 +285,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(8, 0);
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(
                         DayOfWeek.MONDAY,
                         DayOfWeek.TUESDAY,
@@ -318,10 +318,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(12, 0);
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY))
                 .build();
 
@@ -343,10 +343,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(20, 30);
         ZoneId timezone = ZoneId.of("UTC");
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.TUESDAY))
                 .build();
 
@@ -367,10 +367,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(7, 15);
         ZoneId timezone = ZoneId.of("America/Los_Angeles");
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.WEDNESDAY))
                 .build();
 
@@ -391,10 +391,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(18, 45);
         ZoneId timezone = ZoneId.of("Asia/Tokyo");
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.FRIDAY))
                 .build();
 
@@ -416,10 +416,10 @@ class ScheduleUtilsTest {
         ZoneId timezone = ZoneId.systemDefault();
         DayOfWeek startDayOfWeek = startDate.getDayOfWeek();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(startDayOfWeek))
                 .build();
 
@@ -442,10 +442,10 @@ class ScheduleUtilsTest {
         ZoneId timezone = ZoneId.systemDefault();
         DayOfWeek today = LocalDate.now().getDayOfWeek();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(today))
                 .build();
 
@@ -468,10 +468,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(9, 0);
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.MONDAY))
                 .build();
 
@@ -500,10 +500,10 @@ class ScheduleUtilsTest {
         daysWithDuplicates.add(DayOfWeek.MONDAY);
         daysWithDuplicates.add(DayOfWeek.WEDNESDAY);
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(daysWithDuplicates)
                 .build();
 
@@ -525,10 +525,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.MIDNIGHT;
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.THURSDAY))
                 .build();
 
@@ -549,10 +549,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(23, 59);
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.SUNDAY))
                 .build();
 
@@ -573,10 +573,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(13, 0);
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .frequency(Frequency.BI_WEEKLY)
                 .days(List.of(DayOfWeek.FRIDAY))
                 .build();
@@ -602,10 +602,10 @@ class ScheduleUtilsTest {
         DayOfWeek today = LocalDate.now().getDayOfWeek();
         DayOfWeek tomorrow = today.plus(1);
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(today, tomorrow))
                 .build();
 
@@ -627,10 +627,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(8, 30);
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.MONDAY))
                 .build();
 
@@ -657,10 +657,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(12, 0);
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.TUESDAY))
                 .build();
 
@@ -684,10 +684,10 @@ class ScheduleUtilsTest {
         ZoneId timezone = ZoneId.systemDefault();
         DayOfWeek todayDayOfWeek = today.getDayOfWeek();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(today.minusWeeks(2))
                 .time(currentTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(todayDayOfWeek))
                 .build();
 
@@ -710,10 +710,10 @@ class ScheduleUtilsTest {
         ZoneId timezone = ZoneId.systemDefault();
         DayOfWeek todayDayOfWeek = today.getDayOfWeek();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(today)
                 .time(pastTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(todayDayOfWeek))
                 .build();
 
@@ -737,10 +737,10 @@ class ScheduleUtilsTest {
         ZoneId timezone = ZoneId.systemDefault();
         DayOfWeek startDayOfWeek = startDate.getDayOfWeek();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(startDayOfWeek))
                 .build();
 
@@ -761,10 +761,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(11, 30);
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.FRIDAY, DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY))
                 .build();
 
@@ -787,10 +787,10 @@ class ScheduleUtilsTest {
         LocalTime executionTime = LocalTime.of(0, 1);
         ZoneId timezone = ZoneId.systemDefault();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(DayOfWeek.THURSDAY))
                 .build();
 
@@ -812,10 +812,10 @@ class ScheduleUtilsTest {
         ZoneId timezone = ZoneId.systemDefault();
         DayOfWeek yesterdayDayOfWeek = startDate.getDayOfWeek();
 
-        Schedule schedule = Schedule.builder()
+        ScheduleDto schedule = ScheduleDto.builder()
                 .startDate(startDate)
                 .time(executionTime)
-                .timezone(timezone)
+                .timezone(timezone.getId())
                 .days(List.of(yesterdayDayOfWeek))
                 .build();
 
