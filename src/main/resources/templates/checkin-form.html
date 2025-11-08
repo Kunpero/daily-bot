@@ -393,7 +393,7 @@
                                     <!-- Days of Week -->
                                     <div class="col-md-8 d-flex align-items-end">
                                         <div class="d-days-of-week container-popover">
-                                            <ul class="el-tooltip__trigger">
+                                            <ul class="el-tooltip__trigger" id = "input-schedule-days">
                                                 <li id="input-schedule-days-monday" class="day-option" data-day="MONDAY">
                                                     <span>Mon</span>
                                                 </li>
@@ -692,19 +692,12 @@
 
             // Validate questions - must not be empty
             if (!questions || questions.length === 0) {
-                const questionsFeedback = document.getElementById('questionsFeedback');
                 const questionsContainer = document.getElementById('questionsContainer');
-                if (questionsFeedback) questionsFeedback.style.display = 'block';
-                questionsContainer.style.border = '2px solid red'; // Force red border
-                questionsContainer.style.color = 'red'; // Force red text
+                questionsContainer.style.border = '2px solid red';
+                questionsContainer.style.color = 'red';
                 e.preventDefault();
                 e.stopPropagation();
                 return;
-            } else {
-                const questionsFeedback = document.getElementById('questionsFeedback');
-                const questionsContainer = document.getElementById('questionsContainer');
-                if (questionsFeedback) questionsFeedback.style.display = 'none';
-                if (questionsContainer) questionsContainer.classList.remove('is-invalid');
             }
 
             // Add hidden inputs for questions
@@ -759,6 +752,16 @@
             document.querySelectorAll('.day-option.active').forEach(function(li) {
                 selectedDays.push(li.getAttribute('data-day'));
             });
+
+            if (!selectedDays || selectedDays.length === 0) {
+                const selectedDaysContainer = document.getElementById('input-schedule-days');
+                selectedDaysContainer.style.border = '2px solid red';
+                selectedDaysContainer.style.borderRadius = '8px';
+                selectedDaysContainer.style.color = 'red';
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
 
             // Add schedule data as hidden inputs if any field is filled
             if (scheduleStartDate || scheduleTime || scheduleTimezone || scheduleFrequency || selectedDays.length > 0) {
