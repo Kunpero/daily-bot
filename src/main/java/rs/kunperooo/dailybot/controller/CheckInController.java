@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import rs.kunperooo.dailybot.controller.dto.CheckInDataRest;
 import rs.kunperooo.dailybot.controller.dto.form.CheckInFormData;
-import rs.kunperooo.dailybot.controller.dto.history.CheckInHistoryRest;
 import rs.kunperooo.dailybot.controller.dto.form.SlackUserRest;
+import rs.kunperooo.dailybot.controller.dto.history.CheckInHistoryRest;
 import rs.kunperooo.dailybot.service.CheckInService;
 import rs.kunperooo.dailybot.service.SlackApiService;
 import rs.kunperooo.dailybot.utils.Converter;
@@ -34,7 +34,6 @@ import static rs.kunperooo.dailybot.utils.Converter.convertToHistoryRestList;
 import static rs.kunperooo.dailybot.utils.Converter.convertToListRest;
 import static rs.kunperooo.dailybot.utils.Converter.convertToMemberListDto;
 import static rs.kunperooo.dailybot.utils.Converter.convertToQuestionListDto;
-import static rs.kunperooo.dailybot.utils.Converter.convertToRest;
 
 @Controller
 @RequestMapping("/checkin")

@@ -14,7 +14,7 @@ public class AuthController {
         if (principal != null) {
             model.addAttribute("user", principal.getAttribute("name"));
             model.addAttribute("email", principal.getAttribute("email"));
-            model.addAttribute("userId", principal.getAttribute("id"));
+            model.addAttribute("userId", principal.getAttribute("sub"));
         }
         return "index";
     }
