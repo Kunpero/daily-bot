@@ -553,6 +553,9 @@
                 // Auto-add new question when typing in the last question
                 if (isLastQuestion(newQuestion) && this.value.trim().length > 0) {
                     setTimeout(() => {
+                        const questionsContainer = document.getElementById('questionsContainer');
+                        questionsContainer.style.border = ''
+                        questionsContainer.style.color = ''
                         if (isLastQuestion(newQuestion) && this.value.trim().length > 0) {
                             addQuestion();
                         }
@@ -686,6 +689,23 @@
                     });
                 }
             });
+
+            // Validate questions - must not be empty
+            if (!questions || questions.length === 0) {
+                const questionsFeedback = document.getElementById('questionsFeedback');
+                const questionsContainer = document.getElementById('questionsContainer');
+                if (questionsFeedback) questionsFeedback.style.display = 'block';
+                questionsContainer.style.border = '2px solid red'; // Force red border
+                questionsContainer.style.color = 'red'; // Force red text
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            } else {
+                const questionsFeedback = document.getElementById('questionsFeedback');
+                const questionsContainer = document.getElementById('questionsContainer');
+                if (questionsFeedback) questionsFeedback.style.display = 'none';
+                if (questionsContainer) questionsContainer.classList.remove('is-invalid');
+            }
 
             // Add hidden inputs for questions
             questions.forEach((question, index) => {
