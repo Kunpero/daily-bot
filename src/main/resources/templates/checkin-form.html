@@ -235,7 +235,7 @@
                     <span th:text="${successMessage}"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-                
+
                 <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     <span th:text="${errorMessage}"></span>
@@ -253,30 +253,30 @@
                     <div class="card-body">
                         <form th:action="${isEdit} ? @{/checkin/{uuid}/edit(uuid=${checkInForm.uuid})} : @{/checkin/create}"
                               th:object="${checkInForm}" method="post" id="checkinForm">
-                            
+
                             <!-- Name Field -->
                             <div class="mb-4">
                                 <label for="name" class="form-label">
                                     <i class="fas fa-tag me-1"></i>
                                     Check-In Name <span class="text-danger">*</span>
                                 </label>
-                                <input type="text" class="form-control" id="name" name="name" 
-                                       th:field="*{name}" 
+                                <input type="text" class="form-control" id="name" name="name"
+                                       th:field="*{name}"
                                        placeholder="Enter a name for this check-in session..."
                                        maxlength="255" required>
                                 <div class="character-count mt-1">
                                     <span id="nameCount">0</span>/255 characters
                                 </div>
                             </div>
-                            
+
                             <!-- Intro Message -->
                             <div class="mb-4">
                                 <label for="introMessage" class="form-label">
                                     <i class="fas fa-comment-dots me-1"></i>
                                     Intro Message
                                 </label>
-                                <textarea class="form-control" id="introMessage" name="introMessage" 
-                                          th:field="*{introMessage}" rows="4" 
+                                <textarea class="form-control" id="introMessage" name="introMessage"
+                                          th:field="*{introMessage}" rows="4"
                                           placeholder="Enter the introduction message for the check-in session..."
                                           maxlength="1000"></textarea>
                                 <div class="character-count mt-1">
@@ -290,7 +290,7 @@
                                     <i class="fas fa-users me-1"></i>
                                     Select Members <span class="text-danger">*</span>
                                 </label>
-                                <select class="form-select" id="membersSelect" multiple>
+                                <select class="form-select" id="membersSelect" multiple required>
                                     <option th:each="user : ${activeUsers != null ? activeUsers : slackUsers}"
                                             th:value="${user.id}"
                                             th:data-real-name="${user.realName}"
@@ -315,7 +315,7 @@
                                         Add Question
                                     </button>
                                 </div>
-                                
+
                                 <div class="questions-container" id="questionsContainer">
                                     <div class="text-center text-muted py-4" id="emptyQuestionsMessage">
                                         <i class="fas fa-question-circle fa-2x mb-2"></i>
@@ -330,8 +330,8 @@
                                     <i class="fas fa-comment-dots me-1"></i>
                                     Outro Message
                                 </label>
-                                <textarea class="form-control" id="outroMessage" name="outroMessage" 
-                                          th:field="*{outroMessage}" rows="4" 
+                                <textarea class="form-control" id="outroMessage" name="outroMessage"
+                                          th:field="*{outroMessage}" rows="4"
                                           placeholder="Enter the conclusion message for the check-in session..."
                                           maxlength="1000"></textarea>
                                 <div class="character-count mt-1">
@@ -343,72 +343,80 @@
                             <div class="mb-4">
                                 <label class="form-label">
                                     <i class="fas fa-calendar-alt me-1"></i>
-                                    Notification Schedule (Optional)
+                                    Notification Schedule
                                 </label>
-                                
-                                <!-- Start Date -->
-                                <div class="mb-3">
-                                    <label for="scheduleStartDate" class="form-label small">Start Date</label>
-                                    <input type="date" class="form-control" id="scheduleStartDate" 
-                                           th:field="*{schedule.startDate}">
+
+                                <!-- First row: Start Date, Time, Timezone -->
+                                <div class="row mb-3">
+                                    <!-- Start Date -->
+                                    <div class="col-md-4">
+                                        <label for="scheduleStartDate" class="form-label small">
+                                            Start Date
+                                        </label>
+                                        <input type="date" class="form-control" id="scheduleStartDate"
+                                               th:field="*{schedule.startDate}"
+                                               required>
+                                    </div>
+
+                                    <!-- Time -->
+                                    <div class="col-md-2">
+                                        <label for="scheduleTime" class="form-label small">Time</label>
+                                        <input type="time" class="form-control" id="scheduleTime"
+                                               th:field="*{schedule.time}" required>
+                                    </div>
+
+                                    <!-- Timezone -->
+                                    <div class="col-md-4">
+                                        <label for="scheduleTimezone" class="form-label small">Timezone</label>
+                                        <select class="form-select" name="timezone" id="scheduleTimezone" th:field="*{schedule.timezone}">
+                                            <option value="Europe/Moscow">Europe/Moscow UTC+3</option>
+                                            <option value="Europe/Belgrade">Europe/Belgrade UTC+1</option>
+                                            <option value="Asia/Tbilisi">Asia/Tbilisi UTC+4</option>
+                                            <option value="America/Bogota">America/Bogota UTC-5</option>
+                                            <option value="UTC">UTC</option>
+                                        </select>
+                                    </div>
                                 </div>
 
-                                <!-- Time -->
-                                <div class="mb-3">
-                                    <label for="scheduleTime" class="form-label small">Time</label>
-                                    <input type="time" class="form-control" id="scheduleTime"
-                                           th:field="*{schedule.time}">
-                                </div>
+                                <!-- Second row: Frequency and Days -->
+                                <div class="row mb-3">
+                                    <!-- Frequency -->
+                                    <div class="col-md-4">
+                                        <label for="scheduleFrequency" class="form-label small">Frequency</label>
+                                        <select class="form-select" id="scheduleFrequency" th:field="*{schedule.frequency}">
+                                            <option value="WEEKLY">Weekly</option>
+                                            <option value="BI_WEEKLY">Bi-Weekly</option>
+                                            <option value="MONTHLY">Monthly</option>
+                                        </select>
+                                    </div>
 
-                                <!-- Timezone -->
-                                <div class="mb-3">
-                                    <label for="scheduleTimezone" class="form-label small">Timezone</label>
-                                    <select class="form-select" name="timezone" id="scheduleTimezone" th:field="*{schedule.timezone}">
-                                        <option value="Europe/Moscow">Europe/Moscow UTC+3</option>
-                                        <option value="Europe/Belgrade">Europe/Belgrade UTC+1</option>
-                                        <option value="Asia/Tbilisi">Asia/Tbilisi UTC+4</option>
-                                        <option value="America/Bogota">America/Bogota UTC-5</option>
-                                        <option value="UTC">UTC</option>
-                                    </select>
-                                </div>
-
-                                <!-- Frequency -->
-                                <div class="mb-3">
-                                    <label for="scheduleFrequency" class="form-label small">Frequency</label>
-                                    <select class="form-select" id="scheduleFrequency" th:field="*{schedule.frequency}">
-                                        <option value="WEEKLY">Weekly</option>
-                                        <option value="BI_WEEKLY">Bi-Weekly</option>
-                                        <option value="MONTHLY">Monthly</option>
-                                    </select>
-                                </div>
-
-                                <!-- Days of Week -->
-                                <div class="mb-3">
-                                    <label class="form-label small">Days</label>
-                                    <div class="d-days-of-week container-popover">
-                                        <ul class="el-tooltip__trigger">
-                                            <li id="input-schedule-days-monday" class="day-option" data-day="MONDAY">
-                                                <span>Mon</span>
-                                            </li>
-                                            <li id="input-schedule-days-tuesday" class="day-option" data-day="TUESDAY">
-                                                <span>Tue</span>
-                                            </li>
-                                            <li id="input-schedule-days-wednesday" class="day-option" data-day="WEDNESDAY">
-                                                <span>Wed</span>
-                                            </li>
-                                            <li id="input-schedule-days-thursday" class="day-option" data-day="THURSDAY">
-                                                <span>Thu</span>
-                                            </li>
-                                            <li id="input-schedule-days-friday" class="day-option" data-day="FRIDAY">
-                                                <span>Fri</span>
-                                            </li>
-                                            <li id="input-schedule-days-saturday" class="day-option" data-day="SATURDAY">
-                                                <span>Sat</span>
-                                            </li>
-                                            <li id="input-schedule-days-sunday" class="day-option" data-day="SUNDAY">
-                                                <span>Sun</span>
-                                            </li>
-                                        </ul>
+                                    <!-- Days of Week -->
+                                    <div class="col-md-8 d-flex align-items-end">
+                                        <div class="d-days-of-week container-popover">
+                                            <ul class="el-tooltip__trigger">
+                                                <li id="input-schedule-days-monday" class="day-option" data-day="MONDAY">
+                                                    <span>Mon</span>
+                                                </li>
+                                                <li id="input-schedule-days-tuesday" class="day-option" data-day="TUESDAY">
+                                                    <span>Tue</span>
+                                                </li>
+                                                <li id="input-schedule-days-wednesday" class="day-option" data-day="WEDNESDAY">
+                                                    <span>Wed</span>
+                                                </li>
+                                                <li id="input-schedule-days-thursday" class="day-option" data-day="THURSDAY">
+                                                    <span>Thu</span>
+                                                </li>
+                                                <li id="input-schedule-days-friday" class="day-option" data-day="FRIDAY">
+                                                    <span>Fri</span>
+                                                </li>
+                                                <li id="input-schedule-days-saturday" class="day-option" data-day="SATURDAY">
+                                                    <span>Sat</span>
+                                                </li>
+                                                <li id="input-schedule-days-sunday" class="day-option" data-day="SUNDAY">
+                                                    <span>Sun</span>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -452,11 +460,11 @@
         function updateCharacterCount(textareaId, countId, maxLength) {
             const textarea = document.getElementById(textareaId);
             const countElement = document.getElementById(countId);
-            
+
             function updateCount() {
                 const count = textarea.value.length;
                 countElement.textContent = count;
-                
+
                 countElement.className = 'character-count mt-1';
                 if (count > maxLength * 0.9) {
                     countElement.classList.add('danger');
@@ -464,7 +472,7 @@
                     countElement.classList.add('warning');
                 }
             }
-            
+
             textarea.addEventListener('input', updateCount);
             updateCount();
         }
@@ -498,7 +506,7 @@
             const container = document.getElementById('questionsContainer');
             const questionId = questionData ? questionData.uuid : generateUUID();
             const questionNumber = container.querySelectorAll('.question-item').length + 1;
-            
+
             const questionHtml = `
                 <div class="question-item" data-question-id="${questionId}">
                     <i class="fas fa-grip-vertical question-handle"></i>
@@ -511,9 +519,9 @@
                         <div class="question-header">
                             <div class="question-number">${questionNumber}</div>
                             <div class="flex-grow-1">
-                                <input type="text" class="form-control question-text" 
-                                       placeholder="Enter your question..." 
-                                       maxlength="500" 
+                                <input type="text" class="form-control question-text"
+                                       placeholder="Enter your question..."
+                                       maxlength="500"
                                        value="${questionData ? questionData.text || '' : ''}">
                                 <div class="character-count mt-1">
                                     <span class="question-text-count">0</span>/500 characters
@@ -523,14 +531,14 @@
                     </div>
                 </div>
             `;
-            
+
             container.insertAdjacentHTML('beforeend', questionHtml);
-            
+
             // Add event listeners to the new question
             const newQuestion = container.lastElementChild;
             const questionText = newQuestion.querySelector('.question-text');
             const questionTextCount = newQuestion.querySelector('.question-text-count');
-            
+
             // Character count for question text
             questionText.addEventListener('input', function() {
                 const count = this.value.length;
@@ -541,7 +549,7 @@
                 } else if (count > 350) {
                     questionTextCount.classList.add('warning');
                 }
-                
+
                 // Auto-add new question when typing in the last question
                 if (isLastQuestion(newQuestion) && this.value.trim().length > 0) {
                     setTimeout(() => {
@@ -550,7 +558,7 @@
                         }
                     }, 500);
                 }
-                
+
             });
 
             // Remove button
@@ -584,7 +592,7 @@
             const container = document.getElementById('questionsContainer');
             const questions = container.querySelectorAll('.question-item');
             const emptyMessage = document.getElementById('emptyQuestionsMessage');
-            
+
             if (questions.length === 0) {
                 emptyMessage.style.display = 'block';
             } else {
@@ -653,7 +661,7 @@
                     }).filter(function(id) {
                         return id != null && id !== '';
                     });
-                    
+
                     if (ids.length > 0) {
                         $select.val(ids).trigger('change');
                     }
@@ -661,12 +669,13 @@
             }
         }
 
+
         // Form submission
         document.getElementById('checkinForm').addEventListener('submit', function(e) {
             // Collect questions data
             const questions = [];
             const questionItems = document.querySelectorAll('.question-item');
-            
+
             questionItems.forEach((item, index) => {
                 const text = item.querySelector('.question-text').value.trim();
                 if (text) {
@@ -681,7 +690,7 @@
             // Add hidden inputs for questions
             questions.forEach((question, index) => {
                 const questionPrefix = `questions[${index}]`;
-                
+
                 addHiddenInput(questionPrefix + '.uuid', question.uuid);
                 addHiddenInput(questionPrefix + '.text', question.text);
                 addHiddenInput(questionPrefix + '.order', question.order);
@@ -712,7 +721,7 @@
                 const realName = el ? el.data('real-name') || m.text : m.text;
                 const imageUrl = el ? el.data('image-url') || '' : '';
                 const username = m.id; // username is the id value
-                
+
                 addHiddenInput(`members[${idx}].id`, m.id);
                 addHiddenInput(`members[${idx}].realName`, realName);
                 addHiddenInput(`members[${idx}].username`, username);
@@ -724,7 +733,7 @@
             const scheduleTime = document.getElementById('scheduleTime').value;
             const scheduleTimezone = document.getElementById('scheduleTimezone').value;
             const scheduleFrequency = document.getElementById('scheduleFrequency').value;
-            
+
             // Collect selected days
             const selectedDays = [];
             document.querySelectorAll('.day-option.active').forEach(function(li) {
@@ -780,10 +789,10 @@
             // Load existing schedule days from form data
             const existingSchedule = /*[[${checkInForm.schedule}]]*/ null;
             if (existingSchedule && existingSchedule.days) {
-                const existingDays = Array.isArray(existingSchedule.days) 
-                    ? existingSchedule.days 
+                const existingDays = Array.isArray(existingSchedule.days)
+                    ? existingSchedule.days
                     : (existingSchedule.days instanceof Set ? Array.from(existingSchedule.days) : []);
-                
+
                 existingDays.forEach(function(day) {
                     const dayName = typeof day === 'string' ? day : day.name();
                     const dayElement = document.querySelector(`.day-option[data-day="${dayName}"]`);
