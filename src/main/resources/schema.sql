@@ -89,6 +89,8 @@ CREATE TABLE CHECK_IN_ANSWER
 );
 CREATE INDEX idx_check_in_answer_history_id ON CHECK_IN_ANSWER (check_in_history_id);
 CREATE INDEX idx_check_in_answer_question_in_history_id ON CHECK_IN_ANSWER (check_in_question_in_history_id);
+ALTER TABLE CHECK_IN_ANSWER
+    ADD CONSTRAINT unique_answer_per_user_per_question UNIQUE (user_id, check_in_question_in_history_id);
 
 CREATE TABLE check_in_notification_schedule
 (

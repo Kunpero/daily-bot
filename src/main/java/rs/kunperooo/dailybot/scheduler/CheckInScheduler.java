@@ -9,13 +9,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import rs.kunperooo.dailybot.service.dto.CheckInDataDto;
-import rs.kunperooo.dailybot.service.dto.MemberDto;
 import rs.kunperooo.dailybot.service.CheckInService;
 import rs.kunperooo.dailybot.service.SlackApiService;
+import rs.kunperooo.dailybot.service.dto.CheckInDataDto;
+import rs.kunperooo.dailybot.service.dto.MemberDto;
 import rs.kunperooo.dailybot.utils.ScheduleUtils;
 
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +31,7 @@ public class CheckInScheduler {
 
     @Scheduled(cron = "${check.in.cron}")
     public void schedule() {
-        List<CheckInDataDto> checkIns = checkInService.findByNextExecutionIsBefore(ZonedDateTime.now(ZoneId.systemDefault()), Pageable.ofSize(10));
+        List<CheckInDataDto> checkIns = checkInService.findByNextExecutionIsBefore(ZonedDateTime.now(ZoneOffset.UTC), Pageable.ofSize(10));
 
         for (CheckInDataDto checkIn : checkIns) {
             sendNotification(checkIn);

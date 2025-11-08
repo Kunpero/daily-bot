@@ -212,13 +212,13 @@
                                     <!-- Answers for this question -->
                                     <div th:if="${question.answers != null and !question.answers.isEmpty()}">
                                         <div th:each="answer : ${question.answers}" class="answer-item">
-                                            <div class="answer-text" th:text="${answer.text}">Answer text</div>
                                             <div class="answer-user" th:if="${answer.slackUser != null}">
                                                 <img th:src="${answer.slackUser.profileImage32}"
                                                      th:alt="${answer.slackUser.realName}"
                                                      onerror="this.src='https://via.placeholder.com/32'">
                                                 <span class="answer-user-name" th:text="${answer.slackUser.realName}">User Name</span>
                                             </div>
+                                            <div class="answer-text" th:text="${answer.text}">Answer text</div>
                                         </div>
                                     </div>
                                     
@@ -320,8 +320,8 @@
                             
                             return `
                                 <div class="answer-item">
+                                ${userHtml}
                                     <div class="answer-text">${answerText}</div>
-                                    ${userHtml}
                                 </div>
                             `;
                         }).join('');
