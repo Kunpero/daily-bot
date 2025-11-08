@@ -155,6 +155,7 @@ public class RelationalDbCheckInService implements CheckInService {
                 .setTimezone(schedule.getTimezone())
                 .setFrequency(schedule.getFrequency())
                 .setWeekDays(schedule.getDays() != null ? new ArrayList<>(schedule.getDays()) : new ArrayList<>())
+                .setNextExecution(calculateNextExecution(schedule))
                 .setUpdatedAt(LocalDateTime.now());
         checkIn.setNotificationSchedule(scheduleEntity);
         checkInRepository.save(checkIn);
