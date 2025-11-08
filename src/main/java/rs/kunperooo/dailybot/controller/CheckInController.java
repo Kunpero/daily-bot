@@ -20,18 +20,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import rs.kunperooo.dailybot.controller.dto.CheckInDataRest;
 import rs.kunperooo.dailybot.controller.dto.CheckInFormData;
+import rs.kunperooo.dailybot.controller.dto.CheckInHistoryRest;
+import rs.kunperooo.dailybot.controller.dto.ShowAnswerRest;
+import rs.kunperooo.dailybot.controller.dto.ShowQuestionRest;
 import rs.kunperooo.dailybot.controller.dto.SlackUserRest;
 import rs.kunperooo.dailybot.service.CheckInService;
 import rs.kunperooo.dailybot.service.SlackApiService;
 import rs.kunperooo.dailybot.utils.Converter;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import static rs.kunperooo.dailybot.utils.Converter.convertToDto;
+import static rs.kunperooo.dailybot.utils.Converter.convertToHistoryRestList;
 import static rs.kunperooo.dailybot.utils.Converter.convertToListRest;
 import static rs.kunperooo.dailybot.utils.Converter.convertToMemberListDto;
 import static rs.kunperooo.dailybot.utils.Converter.convertToQuestionListDto;
+import static rs.kunperooo.dailybot.utils.Converter.convertToRest;
 
 @Controller
 @RequestMapping("/checkin")
@@ -87,10 +95,10 @@ public class CheckInController {
     public String viewCheckIn(@PathVariable UUID uuid, Model model) {
         log.debug("Viewing check-in with ID: {}", uuid);
 
-        CheckInDataRest checkInForm = Converter.convertToRest(checkInService.findByUuid(uuid))
-                .orElseThrow(() -> new RuntimeException("Check-in not found with ID: " + uuid));
+        // Mock data for testing
+        List<CheckInHistoryRest> checkInHistoryList = convertToHistoryRestList(checkInService.getHistory(uuid));
 
-        model.addAttribute("checkInForm", checkInForm);
+        model.addAttribute("checkInHistoryList", checkInHistoryList);
         return "checkin-detail";
     }
 

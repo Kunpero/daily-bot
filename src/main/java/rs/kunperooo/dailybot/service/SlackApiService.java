@@ -7,8 +7,10 @@ import com.slack.api.app_backend.interactive_components.response.ActionResponse;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
+import com.slack.api.methods.request.users.UsersInfoRequest;
 import com.slack.api.methods.request.views.ViewsOpenRequest;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.slack.api.methods.response.users.UsersInfoResponse;
 import com.slack.api.methods.response.users.UsersListResponse;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
 import com.slack.api.model.Message;
@@ -80,6 +82,13 @@ public class SlackApiService {
         log.info("Retrieved {} active users from {} total users", activeUsers.size(), allUsers.size());
 
         return userDtos;
+    }
+
+    @SneakyThrows
+    public SlackUserDto getUser(String slackUserId) {
+        UsersInfoResponse usersInfoResponse = slack.methods(slackBotToken).usersInfo(UsersInfoRequest.builder().user(slackUserId).build());
+
+        return  SlackUserConverter.convert(usersInfoResponse.getUser());
     }
 
     /**
@@ -179,6 +188,21 @@ public class SlackApiService {
         } catch (IOException e) {
             log.error("IO error while retrieving users from Slack: {}", e.getMessage(), e);
             throw e;
+        }
+    }
+
+    @SneakyThrows
+    public void sendChatPostMessage(String channelId, List<LayoutBlock> blocks, Message.Metadata metadata) {
+        ChatPostMessageResponse response = slack.methods(slackBotToken).chatPostMessage(
+                ChatPostMessageRequest.builder()
+                        .channel(channelId)
+                        .metadata(metadata)
+                        .blocks(blocks)
+                        .build()
+        );
+
+        if (!response.isOk()) {
+            throw new RuntimeException("Failed to send interactive message: " + response.getError());
         }
     }
 }

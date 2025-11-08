@@ -10,5 +10,5 @@ import java.util.List;
 public class ShowQuestionRest {
     private Integer order;
     private String text;
-    private List<ShowAnswerRest> answer;
+    private List<ShowAnswerRest> answers;
 }

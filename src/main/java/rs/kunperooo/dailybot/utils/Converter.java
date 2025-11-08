@@ -2,24 +2,35 @@ package rs.kunperooo.dailybot.utils;
 
 import org.springframework.data.domain.Page;
 import rs.kunperooo.dailybot.controller.dto.CheckInDataRest;
+import rs.kunperooo.dailybot.controller.dto.CheckInHistoryRest;
 import rs.kunperooo.dailybot.controller.dto.MemberRest;
 import rs.kunperooo.dailybot.controller.dto.QuestionRest;
 import rs.kunperooo.dailybot.controller.dto.ScheduleRest;
+import rs.kunperooo.dailybot.controller.dto.ShowAnswerRest;
+import rs.kunperooo.dailybot.controller.dto.ShowQuestionRest;
 import rs.kunperooo.dailybot.controller.dto.SlackUserRest;
 import rs.kunperooo.dailybot.service.dto.CheckInDataDto;
 import rs.kunperooo.dailybot.service.dto.MemberDto;
 import rs.kunperooo.dailybot.service.dto.QuestionDto;
 import rs.kunperooo.dailybot.service.dto.ScheduleDto;
 import rs.kunperooo.dailybot.entity.CheckInEntity;
+import rs.kunperooo.dailybot.entity.CheckInHistoryEntity;
 import rs.kunperooo.dailybot.entity.CheckInNotificationScheduleEntity;
 import rs.kunperooo.dailybot.entity.CheckInQuestionEntity;
+import rs.kunperooo.dailybot.entity.CheckInQuestionInHistoryEntity;
+import rs.kunperooo.dailybot.entity.CheckInAnswerEntity;
 import rs.kunperooo.dailybot.service.dto.SlackUserDto;
+import rs.kunperooo.dailybot.service.dto.history.CheckInHistoryDto;
+import rs.kunperooo.dailybot.service.dto.history.ShowQuestionDto;
+import rs.kunperooo.dailybot.service.dto.history.ShowAnswerDto;
 
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class Converter {
 
@@ -279,5 +290,117 @@ public class Converter {
         return slackUserDtoList.stream()
                 .map(Converter::convertToRest)
                 .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static List<CheckInHistoryDto> convertToHistoryDtoListFromQuestions(List<CheckInQuestionInHistoryEntity> questionsInHistory, Map<String, SlackUserDto> slackUsers) {
+        if (questionsInHistory == null || questionsInHistory.isEmpty()) {
+            return new LinkedList<>();
+        }
+        
+        // Group questions by their checkInHistory
+        return questionsInHistory.stream()
+                .collect(Collectors.groupingBy(CheckInQuestionInHistoryEntity::getCheckInHistory))
+                .entrySet().stream()
+                .map(entry -> convertToDtoFromQuestions(entry.getKey(), entry.getValue(), slackUsers))
+                .sorted(Comparator.comparing(CheckInHistoryDto::getCreationDate))
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static CheckInHistoryDto convertToDtoFromQuestions(CheckInHistoryEntity history, List<CheckInQuestionInHistoryEntity> questionsInHistory, Map<String, SlackUserDto> slackUsers) {
+        return CheckInHistoryDto.builder()
+                .creationDate(history.getCreatedAt() != null ? history.getCreatedAt().toLocalDate() : null)
+                .questions(convertToShowQuestionDtoList(questionsInHistory, slackUsers))
+                .build();
+    }
+
+    public static List<ShowQuestionDto> convertToShowQuestionDtoList(List<CheckInQuestionInHistoryEntity> questionsInHistory, Map<String, SlackUserDto> slackUsers) {
+        if (questionsInHistory == null || questionsInHistory.isEmpty()) {
+            return new LinkedList<>();
+        }
+        return questionsInHistory.stream()
+                .map(question -> convertToDto(question, slackUsers))
+                .sorted(Comparator.comparing(ShowQuestionDto::getOrder))
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static ShowQuestionDto convertToDto(CheckInQuestionInHistoryEntity questionInHistory, Map<String, SlackUserDto> slackUsers) {
+        return ShowQuestionDto.builder()
+                .order(questionInHistory.getCheckInQuestion() != null ? questionInHistory.getCheckInQuestion().getOrderNumber() : null)
+                .text(questionInHistory.getCheckInQuestion() != null ? questionInHistory.getCheckInQuestion().getQuestion() : null)
+                .answers(convertToShowAnswerDtoList(questionInHistory.getCheckInAnswers(), slackUsers))
+                .build();
+    }
+
+    public static List<ShowAnswerDto> convertToShowAnswerDtoList(List<CheckInAnswerEntity> answers, Map<String, SlackUserDto> slackUsers) {
+        if (answers == null || answers.isEmpty()) {
+            return new LinkedList<>();
+        }
+        return answers.stream()
+                .map(answer -> convertToDto(answer, slackUsers))
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static ShowAnswerDto convertToDto(CheckInAnswerEntity answer, Map<String, SlackUserDto> slackUsers) {
+        rs.kunperooo.dailybot.service.dto.SlackUserDto slackUser = null;
+        if (answer.getUserId() != null && slackUsers != null) {
+            try {
+                slackUser = slackUsers.get(answer.getUserId());
+            } catch (Exception e) {
+                // Log error but continue without user info
+            }
+        }
+        return ShowAnswerDto.builder()
+                .text(answer.getAnswer())
+                .slackUser(slackUser)
+                .build();
+    }
+
+    public static List<CheckInHistoryRest> convertToHistoryRestList(List<CheckInHistoryDto> historyDtoList) {
+        if (historyDtoList == null || historyDtoList.isEmpty()) {
+            return new LinkedList<>();
+        }
+        return historyDtoList.stream()
+                .map(Converter::convertToRest)
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static CheckInHistoryRest convertToRest(CheckInHistoryDto historyDto) {
+        return CheckInHistoryRest.builder()
+                .creationDate(historyDto.getCreationDate())
+                .questions(convertToShowQuestionListRest(historyDto.getQuestions()))
+                .build();
+    }
+
+    public static List<ShowQuestionRest> convertToShowQuestionListRest(List<ShowQuestionDto> questionDtoList) {
+        if (questionDtoList == null || questionDtoList.isEmpty()) {
+            return new LinkedList<>();
+        }
+        return questionDtoList.stream()
+                .map(Converter::convertToRest)
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static ShowQuestionRest convertToRest(ShowQuestionDto questionDto) {
+        return ShowQuestionRest.builder()
+                .order(questionDto.getOrder())
+                .text(questionDto.getText())
+                .answers(convertToShowAnswerListRest(questionDto.getAnswers()))
+                .build();
+    }
+
+    public static List<ShowAnswerRest> convertToShowAnswerListRest(List<ShowAnswerDto> answerDtoList) {
+        if (answerDtoList == null || answerDtoList.isEmpty()) {
+            return new LinkedList<>();
+        }
+        return answerDtoList.stream()
+                .map(Converter::convertToRest)
+                .collect(LinkedList::new, LinkedList::add, LinkedList::addAll);
+    }
+
+    public static ShowAnswerRest convertToRest(ShowAnswerDto answerDto) {
+        return ShowAnswerRest.builder()
+                .text(answerDto.getText())
+                .slackUser(answerDto.getSlackUser() != null ? convertToRest(answerDto.getSlackUser()) : null)
+                .build();
     }
 }

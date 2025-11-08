@@ -20,11 +20,14 @@ import rs.kunperooo.dailybot.repository.CheckInNotificationScheduleRepository;
 import rs.kunperooo.dailybot.repository.CheckInQuestionInHistoryRepository;
 import rs.kunperooo.dailybot.repository.CheckInQuestionRepository;
 import rs.kunperooo.dailybot.repository.CheckInRepository;
+import rs.kunperooo.dailybot.service.cache.SlackUserCacheService;
 import rs.kunperooo.dailybot.service.dto.CheckInDataDto;
 import rs.kunperooo.dailybot.service.dto.MemberDto;
 import rs.kunperooo.dailybot.service.dto.QuestionDto;
 import rs.kunperooo.dailybot.service.dto.SaveAnswersDto;
 import rs.kunperooo.dailybot.service.dto.ScheduleDto;
+import rs.kunperooo.dailybot.service.dto.SlackUserDto;
+import rs.kunperooo.dailybot.service.dto.history.CheckInHistoryDto;
 import rs.kunperooo.dailybot.utils.Converter;
 
 import java.time.LocalDateTime;
@@ -37,6 +40,7 @@ import java.util.UUID;
 
 import static rs.kunperooo.dailybot.utils.Converter.convertToDtoList;
 import static rs.kunperooo.dailybot.utils.Converter.convertToMemberEntityList;
+import static rs.kunperooo.dailybot.utils.Converter.convertToHistoryDtoListFromQuestions;
 import static rs.kunperooo.dailybot.utils.ScheduleUtils.calculateNextExecution;
 
 @Service
@@ -52,6 +56,7 @@ public class RelationalDbCheckInService implements CheckInService {
     private final CheckInHistoryRepository checkInHistoryRepository;
     private final CheckInQuestionInHistoryRepository checkInQuestionInHistoryRepository;
     private final CheckInNotificationScheduleRepository checkInNotificationScheduleRepository;
+    private final SlackUserCacheService slackUserCacheService;
 
     public void createCheckIn(String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, @NonNull List<MemberDto> members, ScheduleDto schedule) {
         log.info("Creating new check-in for owner: {} with name: {} and {} questions",
@@ -226,6 +231,34 @@ public class RelationalDbCheckInService implements CheckInService {
         CheckInNotificationScheduleEntity schedule = checkIn.get().getNotificationSchedule();
         schedule.setNextExecution(nextExecution);
         checkInNotificationScheduleRepository.save(schedule);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CheckInHistoryDto> getHistory(UUID checkInUuid) {
+        log.debug("Finding check-in history for UUID: {}", checkInUuid);
+        
+        // Get all histories for this check-in
+        List<CheckInHistoryEntity> histories = checkInHistoryRepository.findByCheckInUuid(checkInUuid);
+        
+        if (histories == null || histories.isEmpty()) {
+            log.debug("No history found for check-in UUID: {}", checkInUuid);
+            return new LinkedList<>();
+        }
+
+        // Get all questions for all histories
+        List<CheckInQuestionInHistoryEntity> allQuestions = new LinkedList<>();
+        for (CheckInHistoryEntity history : histories) {
+            List<CheckInQuestionInHistoryEntity> questions = checkInQuestionInHistoryRepository.findByCheckInHistoryUuid(history.getUuid());
+            allQuestions.addAll(questions);
+        }
+
+        if (allQuestions.isEmpty()) {
+            log.debug("No questions found for check-in UUID: {}", checkInUuid);
+            return new LinkedList<>();
+        }
+
+        return convertToHistoryDtoListFromQuestions(allQuestions, slackUserCacheService.getAllUsers());
     }
 
     private void saveSchedule(CheckInEntity checkIn, ScheduleDto schedule) {

@@ -9,6 +9,7 @@ import rs.kunperooo.dailybot.controller.dto.ScheduleRest;
 import rs.kunperooo.dailybot.entity.CheckInHistoryEntity;
 import rs.kunperooo.dailybot.service.dto.SaveAnswersDto;
 import rs.kunperooo.dailybot.service.dto.ScheduleDto;
+import rs.kunperooo.dailybot.service.dto.history.CheckInHistoryDto;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -39,4 +40,6 @@ public interface CheckInService {
     UUID saveHistory(CheckInDataDto checkIn);
 
     void saveNextExecution(UUID checkInUuid, ZonedDateTime nextExecution);
+
+    List<CheckInHistoryDto> getHistory(UUID checkInUuid);
 }

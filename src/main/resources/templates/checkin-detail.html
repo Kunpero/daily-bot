@@ -210,8 +210,8 @@
                                     </div>
                                     
                                     <!-- Answers for this question -->
-                                    <div th:if="${question.answer != null and !question.answer.isEmpty()}">
-                                        <div th:each="answer : ${question.answer}" class="answer-item">
+                                    <div th:if="${question.answers != null and !question.answers.isEmpty()}">
+                                        <div th:each="answer : ${question.answers}" class="answer-item">
                                             <div class="answer-text" th:text="${answer.text}">Answer text</div>
                                             <div class="answer-user" th:if="${answer.slackUser != null}">
                                                 <img th:src="${answer.slackUser.profileImage32}"
@@ -223,7 +223,7 @@
                                     </div>
                                     
                                     <!-- Empty state if no answers -->
-                                    <div th:if="${question.answer == null or question.answer.isEmpty()}" class="empty-state">
+                                    <div th:if="${question.answers == null or question.answers.isEmpty()}" class="empty-state">
                                         <i class="fas fa-inbox"></i>
                                         <p class="mb-0">No answers</p>
                                     </div>
@@ -303,7 +303,7 @@
                 });
                 
                 contentDiv.innerHTML = sortedQuestions.map((question, index) => {
-                    const answers = question.answer || [];
+                    const answers = question.answers || [];
                     let answerHtml = '';
                     
                     if (answers.length > 0) {
