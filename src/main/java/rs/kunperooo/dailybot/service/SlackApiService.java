@@ -29,7 +29,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import rs.kunperooo.dailybot.controller.dto.CheckInSubmissionMeta;
+import rs.kunperooo.dailybot.controller.dto.form.CheckInSubmissionMeta;
 import rs.kunperooo.dailybot.entity.CheckInAnswerEntity;
 import rs.kunperooo.dailybot.entity.CheckInHistoryEntity;
 import rs.kunperooo.dailybot.service.dto.SlackUserDto;
@@ -42,7 +42,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static rs.kunperooo.dailybot.utils.ActionId.FINISH_CHECK_IN;
-import static rs.kunperooo.dailybot.utils.ActionId.START_CHECK_IN;
 
 @Service
 @RequiredArgsConstructor

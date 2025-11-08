@@ -19,18 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import rs.kunperooo.dailybot.controller.dto.CheckInDataRest;
-import rs.kunperooo.dailybot.controller.dto.CheckInFormData;
-import rs.kunperooo.dailybot.controller.dto.CheckInHistoryRest;
-import rs.kunperooo.dailybot.controller.dto.ShowAnswerRest;
-import rs.kunperooo.dailybot.controller.dto.ShowQuestionRest;
-import rs.kunperooo.dailybot.controller.dto.SlackUserRest;
+import rs.kunperooo.dailybot.controller.dto.form.CheckInFormData;
+import rs.kunperooo.dailybot.controller.dto.history.CheckInHistoryRest;
+import rs.kunperooo.dailybot.controller.dto.form.SlackUserRest;
 import rs.kunperooo.dailybot.service.CheckInService;
 import rs.kunperooo.dailybot.service.SlackApiService;
 import rs.kunperooo.dailybot.utils.Converter;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 

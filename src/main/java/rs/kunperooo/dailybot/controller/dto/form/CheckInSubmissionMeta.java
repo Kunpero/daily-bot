@@ -1,4 +1,4 @@
-package rs.kunperooo.dailybot.controller.dto;
+package rs.kunperooo.dailybot.controller.dto.form;
 
 import lombok.Builder;
 import lombok.Data;

@@ -1,7 +1,6 @@
 package rs.kunperooo.dailybot.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import rs.kunperooo.dailybot.controller.dto.ScheduleRest;
 import rs.kunperooo.dailybot.service.dto.ScheduleDto;
 
 import java.time.DayOfWeek;

@@ -2,6 +2,9 @@ package rs.kunperooo.dailybot.controller.dto;
 
 import lombok.Builder;
 import lombok.Data;
+import rs.kunperooo.dailybot.controller.dto.form.MemberRest;
+import rs.kunperooo.dailybot.controller.dto.form.QuestionRest;
+import rs.kunperooo.dailybot.controller.dto.form.ScheduleRest;
 
 import java.time.LocalDateTime;
 import java.util.List;

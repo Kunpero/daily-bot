@@ -5,7 +5,6 @@ import org.springframework.data.domain.Pageable;
 import rs.kunperooo.dailybot.service.dto.CheckInDataDto;
 import rs.kunperooo.dailybot.service.dto.MemberDto;
 import rs.kunperooo.dailybot.service.dto.QuestionDto;
-import rs.kunperooo.dailybot.controller.dto.ScheduleRest;
 import rs.kunperooo.dailybot.entity.CheckInHistoryEntity;
 import rs.kunperooo.dailybot.service.dto.SaveAnswersDto;
 import rs.kunperooo.dailybot.service.dto.ScheduleDto;

@@ -1,11 +1,9 @@
-package rs.kunperooo.dailybot.controller.dto;
+package rs.kunperooo.dailybot.controller.dto.form;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import rs.kunperooo.dailybot.service.dto.MemberDto;
-import rs.kunperooo.dailybot.service.dto.QuestionDto;
 
 import java.util.List;
 

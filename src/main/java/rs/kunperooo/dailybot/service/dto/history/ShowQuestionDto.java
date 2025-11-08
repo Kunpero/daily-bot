@@ -2,7 +2,6 @@ package rs.kunperooo.dailybot.service.dto.history;
 
 import lombok.Builder;
 import lombok.Data;
-import rs.kunperooo.dailybot.controller.dto.ShowAnswerRest;
 
 import java.util.List;
 

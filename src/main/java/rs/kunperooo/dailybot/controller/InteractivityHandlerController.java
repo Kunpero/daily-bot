@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import rs.kunperooo.dailybot.controller.dto.CheckInSubmissionMeta;
+import rs.kunperooo.dailybot.controller.dto.form.CheckInSubmissionMeta;
 import rs.kunperooo.dailybot.service.CheckInInteractivityService;
 import rs.kunperooo.dailybot.service.dto.AnswerDto;
 import rs.kunperooo.dailybot.service.dto.SaveAnswersDto;
