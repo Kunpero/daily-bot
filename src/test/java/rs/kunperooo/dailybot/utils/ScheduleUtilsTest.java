@@ -829,4 +829,386 @@ class ScheduleUtilsTest {
         assertEquals(yesterdayDayOfWeek, result.toLocalDate().getDayOfWeek());
         assertEquals(executionTime, result.toLocalTime());
     }
+
+    @Test
+    @DisplayName("Should calculate next weekly execution when frequency is WEEKLY")
+    void testCalculateNextExecution_WeeklyFrequency() {
+        // Arrange
+        LocalDate startDate = LocalDate.now().minusWeeks(2);
+        LocalTime executionTime = LocalTime.of(10, 0);
+        ZoneId timezone = ZoneId.systemDefault();
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        DayOfWeek nextDay = today.plus(1);
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.WEEKLY)
+                .days(List.of(nextDay))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(nextDay, result.toLocalDate().getDayOfWeek());
+        assertTrue(result.toLocalDate().isAfter(LocalDate.now().minusDays(1)));
+        assertTrue(result.toLocalDate().isBefore(LocalDate.now().plusDays(8)));
+        assertEquals(executionTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should find next occurrence within 7 days for WEEKLY frequency")
+    void testCalculateNextExecution_WeeklyFrequency_WithinWeek() {
+        // Arrange
+        LocalDate startDate = LocalDate.now().minusWeeks(5);
+        LocalTime executionTime = LocalTime.of(14, 30);
+        ZoneId timezone = ZoneId.systemDefault();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.WEEKLY)
+                .days(List.of(DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.toLocalDate().getDayOfWeek() == DayOfWeek.WEDNESDAY ||
+                   result.toLocalDate().getDayOfWeek() == DayOfWeek.FRIDAY);
+        assertTrue(result.toLocalDate().isAfter(LocalDate.now().minusDays(1)));
+        assertTrue(result.toLocalDate().isBefore(LocalDate.now().plusDays(8)));
+        assertEquals(executionTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should handle WEEKLY frequency when time has passed today")
+    void testCalculateNextExecution_WeeklyFrequency_TimePassed() {
+        // Arrange
+        LocalDate today = LocalDate.now();
+        LocalTime pastTime = LocalTime.now().minusHours(1);
+        ZoneId timezone = ZoneId.systemDefault();
+        DayOfWeek todayDayOfWeek = today.getDayOfWeek();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(today.minusWeeks(1))
+                .time(pastTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.WEEKLY)
+                .days(List.of(todayDayOfWeek))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(todayDayOfWeek, result.toLocalDate().getDayOfWeek());
+        assertTrue(result.toLocalDate().isAfter(today) || result.toLocalDate().equals(today.plusDays(7)));
+        assertEquals(pastTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should calculate next monthly execution when frequency is MONTHLY")
+    void testCalculateNextExecution_MonthlyFrequency() {
+        // Arrange
+        LocalDate startDate = LocalDate.now().minusMonths(2);
+        LocalTime executionTime = LocalTime.of(9, 0);
+        ZoneId timezone = ZoneId.systemDefault();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.MONTHLY)
+                .days(List.of(DayOfWeek.MONDAY))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(DayOfWeek.MONDAY, result.toLocalDate().getDayOfWeek());
+        assertTrue(result.toLocalDate().isAfter(LocalDate.now().minusDays(1)));
+        assertTrue(result.toLocalDate().isBefore(LocalDate.now().plusMonths(2)));
+        assertEquals(executionTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should find next occurrence in current month for MONTHLY frequency")
+    void testCalculateNextExecution_MonthlyFrequency_CurrentMonth() {
+        // Arrange
+        LocalDate startDate = LocalDate.now().withDayOfMonth(1).minusMonths(1);
+        LocalTime executionTime = LocalTime.of(11, 0);
+        ZoneId timezone = ZoneId.systemDefault();
+        DayOfWeek nextDay = LocalDate.now().getDayOfWeek().plus(2);
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.MONTHLY)
+                .days(List.of(nextDay))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(nextDay, result.toLocalDate().getDayOfWeek());
+        assertTrue(result.toLocalDate().isAfter(LocalDate.now().minusDays(1)));
+        assertEquals(executionTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should find next occurrence in next month for MONTHLY frequency when current month passed")
+    void testCalculateNextExecution_MonthlyFrequency_NextMonth() {
+        // Arrange - Start date at beginning of previous month, today is near end of current month
+        LocalDate startDate = LocalDate.now().withDayOfMonth(1).minusMonths(2);
+        LocalTime executionTime = LocalTime.of(15, 0);
+        ZoneId timezone = ZoneId.systemDefault();
+        
+        // Use a day that's likely not in the current month's remaining days
+        DayOfWeek targetDay = DayOfWeek.MONDAY;
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.MONTHLY)
+                .days(List.of(targetDay))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(targetDay, result.toLocalDate().getDayOfWeek());
+        assertTrue(result.toLocalDate().isAfter(LocalDate.now().minusDays(1)));
+        assertEquals(executionTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should handle MONTHLY frequency with multiple days")
+    void testCalculateNextExecution_MonthlyFrequency_MultipleDays() {
+        // Arrange
+        LocalDate startDate = LocalDate.now().minusMonths(3);
+        LocalTime executionTime = LocalTime.of(10, 0);
+        ZoneId timezone = ZoneId.systemDefault();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.MONTHLY)
+                .days(List.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.toLocalDate().getDayOfWeek() == DayOfWeek.TUESDAY ||
+                   result.toLocalDate().getDayOfWeek() == DayOfWeek.THURSDAY);
+        assertTrue(result.toLocalDate().isAfter(LocalDate.now().minusDays(1)));
+        assertEquals(executionTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should handle MONTHLY frequency when start date is in future")
+    void testCalculateNextExecution_MonthlyFrequency_FutureStartDate() {
+        // Arrange
+        LocalDate startDate = LocalDate.now().plusMonths(1).withDayOfMonth(1);
+        LocalTime executionTime = LocalTime.of(12, 0);
+        ZoneId timezone = ZoneId.systemDefault();
+        DayOfWeek startDayOfWeek = startDate.getDayOfWeek();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.MONTHLY)
+                .days(List.of(startDayOfWeek))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(startDate, result.toLocalDate());
+        assertEquals(executionTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should handle MONTHLY frequency when time has passed today")
+    void testCalculateNextExecution_MonthlyFrequency_TimePassed() {
+        // Arrange
+        LocalDate today = LocalDate.now();
+        LocalTime pastTime = LocalTime.now().minusHours(2);
+        ZoneId timezone = ZoneId.systemDefault();
+        DayOfWeek todayDayOfWeek = today.getDayOfWeek();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(today.minusMonths(1))
+                .time(pastTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.MONTHLY)
+                .days(List.of(todayDayOfWeek))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(todayDayOfWeek, result.toLocalDate().getDayOfWeek());
+        assertTrue(result.toLocalDate().isAfter(today) || result.toLocalDate().equals(today.plusMonths(1)));
+        assertEquals(pastTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should handle WEEKLY frequency with all weekdays")
+    void testCalculateNextExecution_WeeklyFrequency_AllWeekdays() {
+        // Arrange
+        LocalDate startDate = LocalDate.now().minusWeeks(3);
+        LocalTime executionTime = LocalTime.of(8, 0);
+        ZoneId timezone = ZoneId.systemDefault();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.WEEKLY)
+                .days(List.of(
+                        DayOfWeek.MONDAY,
+                        DayOfWeek.TUESDAY,
+                        DayOfWeek.WEDNESDAY,
+                        DayOfWeek.THURSDAY,
+                        DayOfWeek.FRIDAY
+                ))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.toLocalDate().isAfter(LocalDate.now().minusDays(1)));
+        assertTrue(result.toLocalDate().isBefore(LocalDate.now().plusDays(8)));
+        assertEquals(executionTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should handle MONTHLY frequency across year boundary")
+    void testCalculateNextExecution_MonthlyFrequency_YearBoundary() {
+        // Arrange - Start in December, calculate for January
+        LocalDate startDate = LocalDate.of(LocalDate.now().getYear() - 1, 12, 1);
+        LocalTime executionTime = LocalTime.of(10, 0);
+        ZoneId timezone = ZoneId.systemDefault();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.MONTHLY)
+                .days(List.of(DayOfWeek.FRIDAY))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(DayOfWeek.FRIDAY, result.toLocalDate().getDayOfWeek());
+        assertTrue(result.toLocalDate().isAfter(LocalDate.now().minusDays(1)));
+        assertEquals(executionTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should default to BI_WEEKLY when frequency is null")
+    void testCalculateNextExecution_NullFrequency_DefaultsToBiWeekly() {
+        // Arrange
+        LocalDate startDate = LocalDate.now().minusWeeks(2);
+        LocalTime executionTime = LocalTime.of(10, 0);
+        ZoneId timezone = ZoneId.systemDefault();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(null)
+                .days(List.of(DayOfWeek.MONDAY))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(DayOfWeek.MONDAY, result.toLocalDate().getDayOfWeek());
+        assertEquals(executionTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should handle WEEKLY frequency with start date today")
+    void testCalculateNextExecution_WeeklyFrequency_StartDateToday() {
+        // Arrange
+        LocalDate today = LocalDate.now();
+        LocalTime futureTime = LocalTime.now().plusHours(2);
+        ZoneId timezone = ZoneId.systemDefault();
+        DayOfWeek todayDayOfWeek = today.getDayOfWeek();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(today)
+                .time(futureTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.WEEKLY)
+                .days(List.of(todayDayOfWeek))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(today, result.toLocalDate());
+        assertEquals(futureTime, result.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("Should handle MONTHLY frequency with start date at month start")
+    void testCalculateNextExecution_MonthlyFrequency_MonthStart() {
+        // Arrange
+        LocalDate startDate = LocalDate.now().withDayOfMonth(1).minusMonths(1);
+        LocalTime executionTime = LocalTime.of(9, 0);
+        ZoneId timezone = ZoneId.systemDefault();
+
+        ScheduleDto schedule = ScheduleDto.builder()
+                .startDate(startDate)
+                .time(executionTime)
+                .timezone(timezone.getId())
+                .frequency(Frequency.MONTHLY)
+                .days(List.of(DayOfWeek.MONDAY))
+                .build();
+
+        // Act
+        ZonedDateTime result = ScheduleUtils.calculateNextExecution(schedule);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(DayOfWeek.MONDAY, result.toLocalDate().getDayOfWeek());
+        assertTrue(result.toLocalDate().isAfter(LocalDate.now().minusDays(1)));
+        assertEquals(executionTime, result.toLocalTime());
+    }
 }
