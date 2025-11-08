@@ -298,9 +298,6 @@
                                             th:text="${user.realName}">
                                     </option>
                                 </select>
-                                <div id="membersSelectFeedback" class="invalid-feedback d-block" style="display:none;">
-                                    Please select at least one member.
-                                </div>
                                 <div th:if="${activeUsers == null and (slackUsers == null or slackUsers.isEmpty())}" class="text-muted small mt-2">
                                     No active Slack users available.
                                 </div>
@@ -317,11 +314,6 @@
                                         <i class="fas fa-plus me-1"></i>
                                         Add Question
                                     </button>
-                                </div>
-                                
-                                <div class="auto-add-indicator">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    <strong>Auto-add feature:</strong> Start typing in the last question to automatically add a new one!
                                 </div>
                                 
                                 <div class="questions-container" id="questionsContainer">
@@ -372,15 +364,10 @@
                                 <div class="mb-3">
                                     <label for="scheduleTimezone" class="form-label small">Timezone</label>
                                     <select class="form-select" name="timezone" id="scheduleTimezone" th:field="*{schedule.timezone}">
-                                        <option value="America/New_York">America/New_York (EST/EDT)</option>
-                                        <option value="America/Chicago">America/Chicago (CST/CDT)</option>
-                                        <option value="America/Denver">America/Denver (MST/MDT)</option>
-                                        <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
-                                        <option value="Europe/London">Europe/London (GMT/BST)</option>
-                                        <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
-                                        <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-                                        <option value="Asia/Shanghai">Asia/Shanghai (CST)</option>
-                                        <option value="Australia/Sydney">Australia/Sydney (AEST/AEDT)</option>
+                                        <option value="Europe/Moscow">Europe/Moscow UTC+3</option>
+                                        <option value="Europe/Belgrade">Europe/Belgrade UTC+1</option>
+                                        <option value="Asia/Tbilisi">Asia/Tbilisi UTC+4</option>
+                                        <option value="America/Bogota">America/Bogota UTC-5</option>
                                         <option value="UTC">UTC</option>
                                     </select>
                                 </div>
