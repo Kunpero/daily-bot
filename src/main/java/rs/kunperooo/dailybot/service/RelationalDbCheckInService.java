@@ -87,13 +87,13 @@ public class RelationalDbCheckInService implements CheckInService {
     @Transactional(readOnly = true)
     public List<CheckInDataDto> findByOwner(String owner) {
         log.debug("Finding all check-ins for owner: {}", owner);
-        return convertToDtoList(checkInRepository.findByOwner(owner));
+        return convertToDtoList(checkInRepository.findByOwner(owner), slackUserCacheService.getAllUsers());
     }
 
     @Transactional(readOnly = true)
     public List<CheckInDataDto> findAll() {
         log.debug("Finding all check-ins");
-        return convertToDtoList(checkInRepository.findAll());
+        return convertToDtoList(checkInRepository.findAll(), slackUserCacheService.getAllUsers());
     }
 
     @Transactional(readOnly = true)
@@ -105,13 +105,13 @@ public class RelationalDbCheckInService implements CheckInService {
             activeQuestions = checkInQuestionRepository.getAllByCheckInIdAndIsActiveTrue(checkIn.get().getId());
             checkIn.get().setCheckInQuestions(activeQuestions);
         }
-        return Converter.convertToDto(checkIn);
+        return Converter.convertToDto(checkIn, slackUserCacheService.getUser(checkIn.get().getOwner()));
     }
 
     @Transactional(readOnly = true)
     public Page<CheckInDataDto> findByOwner(String owner, Pageable pageable) {
         log.debug("Finding check-ins for owner: {} with pagination", owner);
-        return Converter.convertToDtoPage(checkInRepository.findByOwner(owner, pageable));
+        return Converter.convertToDtoPage(checkInRepository.findByOwner(owner, pageable), slackUserCacheService.getUser(owner));
     }
 
     public void updateCheckIn(UUID uuid, String owner, String name, String introMessage, String outroMessage, @NonNull List<QuestionDto> questions, List<MemberDto> members, ScheduleDto schedule) {
@@ -199,7 +199,8 @@ public class RelationalDbCheckInService implements CheckInService {
 
     @Override
     public List<CheckInDataDto> findByNextExecutionIsBefore(ZonedDateTime nextExecutionBefore, Pageable pageable) {
-        return checkInNotificationScheduleRepository.findByNextExecutionIsBefore(nextExecutionBefore, pageable).stream().map(n -> Converter.convertToDto(n.getCheckIn())).toList();
+        return checkInNotificationScheduleRepository.findByNextExecutionIsBefore(nextExecutionBefore, pageable).stream()
+                .map(n -> Converter.convertToDto(n.getCheckIn(), slackUserCacheService.getUser(n.getCheckIn().getOwner()))).toList();
     }
 
     @NotNull

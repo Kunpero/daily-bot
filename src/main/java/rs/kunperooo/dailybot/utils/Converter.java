@@ -34,20 +34,21 @@ import java.util.stream.Collectors;
 
 public class Converter {
 
-    public static List<CheckInDataDto> convertToDtoList(List<CheckInEntity> checkInList) {
+    public static List<CheckInDataDto> convertToDtoList(List<CheckInEntity> checkInList, Map<String, SlackUserDto> slackUsers) {
         return checkInList.stream()
-                .map(Converter::convertToDto)
+                .map(c -> convertToDto(c, slackUsers.get(c.getOwner())))
                 .toList();
     }
 
-    public static Optional<CheckInDataDto> convertToDto(Optional<CheckInEntity> checkIn) {
-        return checkIn.map(Converter::convertToDto);
+    public static Optional<CheckInDataDto> convertToDto(Optional<CheckInEntity> checkIn, SlackUserDto slackUserDto) {
+        return checkIn.map(c -> convertToDto(c, slackUserDto));
     }
 
-    public static CheckInDataDto convertToDto(CheckInEntity checkIn) {
+    public static CheckInDataDto convertToDto(CheckInEntity checkIn, SlackUserDto slackUserDto) {
         return CheckInDataDto.builder()
                 .uuid(checkIn.getUuid())
                 .owner(checkIn.getOwner())
+                .ownerName(slackUserDto.getName())
                 .name(checkIn.getName())
                 .lastUpdateDate(checkIn.getLastUpdateDate())
                 .creationDate(checkIn.getCreationDate())
@@ -92,8 +93,8 @@ public class Converter {
                 .build();
     }
 
-    public static Page<CheckInDataDto> convertToDtoPage(Page<CheckInEntity> checkInPage) {
-        return checkInPage.map(Converter::convertToDto);
+    public static Page<CheckInDataDto> convertToDtoPage(Page<CheckInEntity> checkInPage, SlackUserDto slackUserDto) {
+        return checkInPage.map(c -> convertToDto(c, slackUserDto));
     }
 
     public static List<CheckInQuestionEntity> convertToEntityList(List<QuestionDto> questions) {
@@ -143,6 +144,7 @@ public class Converter {
         return CheckInDataRest.builder()
                 .uuid(checkInDataDto.getUuid())
                 .owner(checkInDataDto.getOwner())
+                .ownerName(checkInDataDto.getOwnerName())
                 .name(checkInDataDto.getName())
                 .lastUpdateDate(checkInDataDto.getLastUpdateDate())
                 .creationDate(checkInDataDto.getCreationDate())

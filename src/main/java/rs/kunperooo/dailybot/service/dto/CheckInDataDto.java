@@ -14,6 +14,8 @@ public class CheckInDataDto {
 
     private String owner;
 
+    private String ownerName;
+
     private String name;
 
     private LocalDateTime creationDate;
