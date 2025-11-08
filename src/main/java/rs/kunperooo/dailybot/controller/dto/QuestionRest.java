@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-/**
- * DTO for CheckIn questions
- */
 @Data
 @Builder
 @NoArgsConstructor

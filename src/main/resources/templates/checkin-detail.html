@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="'Check-In Details - ' + ${checkInForm.name}">Check-In Details - Daily Bot</title>
+    <title>Check-In History Details - Daily Bot</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -39,75 +37,74 @@
         .btn-secondary {
             border-radius: 8px;
         }
-        .btn-danger {
+        .btn-nav {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
             border-radius: 8px;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+        .btn-nav:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            transform: translateY(-1px);
+        }
+        .btn-nav:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         .alert {
             border-radius: 10px;
             border: none;
         }
-        .info-item {
+        .question-column {
             background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 2px solid #dee2e6;
+            min-height: 200px;
+        }
+        .question-header {
+            font-weight: 600;
+            color: #4A154B;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .answer-item {
+            background: white;
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
         }
-        .info-label {
-            font-weight: 600;
-            color: #495057;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .answer-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-        .info-value {
+        .answer-text {
             color: #212529;
-            margin-top: 0.25rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
         }
-        .question-item {
-            background: #f8f9fa;
-            border: 2px solid #dee2e6;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            position: relative;
+        .answer-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
-        .question-number {
-            background: #4A154B;
-            color: white;
-            border-radius: 50%;
+        .answer-user img {
             width: 32px;
             height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.875rem;
-            font-weight: bold;
-            margin-right: 15px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #dee2e6;
         }
-        .question-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .question-text {
+        .answer-user-name {
             font-weight: 500;
-            color: #212529;
-        }
-        .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        .stats-number {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-        .stats-label {
-            font-size: 0.875rem;
-            opacity: 0.9;
+            color: #495057;
         }
         .empty-state {
             text-align: center;
@@ -119,22 +116,20 @@
             margin-bottom: 1rem;
             opacity: 0.5;
         }
-        .message-content {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 1rem;
-            white-space: pre-wrap;
-            font-family: inherit;
+        .date-display {
+            font-size: 1.1rem;
+            font-weight: 500;
         }
-        .timestamp {
-            font-size: 0.875rem;
-            color: #6c757d;
+        .navigation-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        /* Members styles */
-        .member-badge { margin: 2px; }
-        .member-option { display:flex; align-items:center; gap:8px; }
-        .member-option img { width:22px; height:22px; border-radius:50%; object-fit:cover; }
-        .member-option .name { font-weight:500; color:#333; }
+        .current-index {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -159,7 +154,7 @@
 
     <div class="container main-content">
         <div class="row justify-content-center">
-            <div class="col-lg-10">
+            <div class="col-12">
                 <!-- Success/Error Messages -->
                 <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle me-2"></i>
@@ -173,146 +168,215 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
 
-                <!-- Check-In Details Card -->
-                <div class="card">
+                <!-- Check-In History Card -->
+                <div class="card" th:if="${checkInHistoryList != null and !checkInHistoryList.isEmpty()}">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Check-In Details
-                            </h4>
-                            <div>
-                                <a th:href="@{/checkin/{uuid}/edit(uuid=${checkInForm.uuid})}" class="btn btn-light btn-sm me-2">
-                                    <i class="fas fa-edit me-1"></i>
-                                    Edit
-                                </a>
-                                <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                    <i class="fas fa-trash me-1"></i>
-                                    Delete
+                            <div class="date-display">
+                                <i class="fas fa-calendar me-2"></i>
+                                <span th:text="${#temporals.format(checkInHistoryList[0].creationDate, 'MMMM dd, yyyy')}">Date</span>
+                            </div>
+                            <div class="navigation-controls">
+                                <button type="button" 
+                                        class="btn btn-nav" 
+                                        id="prevBtn"
+                                        onclick="navigateCheckIn(-1)"
+                                        th:disabled="${checkInHistoryList.size() <= 1}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span class="current-index">
+                                    <span id="currentIndex">1</span> / <span th:text="${checkInHistoryList.size()}">1</span>
+                                </span>
+                                <button type="button" 
+                                        class="btn btn-nav" 
+                                        id="nextBtn"
+                                        onclick="navigateCheckIn(1)"
+                                        th:disabled="${checkInHistoryList.size() <= 1}">
+                                    <i class="fas fa-chevron-right"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- Basic Information -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <div class="info-label">
-                                        <i class="fas fa-tag me-1"></i>
-                                        Check-In Name
+                        <!-- Questions displayed as columns -->
+                        <div class="row" id="checkInContent">
+                            <div th:each="question : ${checkInHistoryList[0].questions}" 
+                                 class="col-md-4 col-lg-3 mb-3"
+                                 th:attr="data-question-order=${question.order}">
+                                <div class="question-column">
+                                    <div class="question-header">
+                                        <span th:text="${question.order}">Q</span>. 
+                                        <span th:text="${question.text}">Question Text</span>
                                     </div>
-                                    <div class="info-value" th:text="${checkInForm.name}">Check-In Name</div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <div class="info-label">
-                                        <i class="fas fa-user me-1"></i>
-                                        Owner
+                                    
+                                    <!-- Answers for this question -->
+                                    <div th:if="${question.answer != null and !question.answer.isEmpty()}">
+                                        <div th:each="answer : ${question.answer}" class="answer-item">
+                                            <div class="answer-text" th:text="${answer.text}">Answer text</div>
+                                            <div class="answer-user" th:if="${answer.slackUser != null}">
+                                                <img th:src="${answer.slackUser.profileImage32}"
+                                                     th:alt="${answer.slackUser.realName}"
+                                                     onerror="this.src='https://via.placeholder.com/32'">
+                                                <span class="answer-user-name" th:text="${answer.slackUser.realName}">User Name</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="info-value" th:text="${checkInForm.owner}">Owner</div>
+                                    
+                                    <!-- Empty state if no answers -->
+                                    <div th:if="${question.answer == null or question.answer.isEmpty()}" class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p class="mb-0">No answers</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Actions -->
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="/checkin" class="btn btn-secondary">
+                <!-- Empty state if no check-in history -->
+                <div class="card" th:if="${checkInHistoryList == null or checkInHistoryList.isEmpty()}">
+                    <div class="card-body">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h5>No Check-In History</h5>
+                            <p>There are no check-in records available.</p>
+                            <a href="/checkin" class="btn btn-primary">
                                 <i class="fas fa-arrow-left me-1"></i>
                                 Back to Check-Ins
                             </a>
                         </div>
                     </div>
                 </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">
-                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>
-                        Confirm Deletion
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete this check-in?</p>
-                    <div class="alert alert-warning">
-                        <strong>Check-In:</strong> <span th:text="${checkInForm.name}">Check-In Name</span><br>
-                        <strong>Owner:</strong> <span th:text="${checkInForm.owner}">Owner</span><br>
-                        <strong>Questions:</strong> <span th:text="${checkInForm.questions != null ? checkInForm.questions.size() : 0}">0</span>
-                    </div>
-                    <p class="text-danger mb-0">
-                        <strong>Warning:</strong> This action cannot be undone!
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>
-                        Cancel
-                    </button>
-                    <form th:action="@{/checkin/{uuid}/delete(uuid=${checkInForm.uuid})}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash me-1"></i>
-                            Delete Check-In
-                        </button>
-                    </form>
-                </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            const $select = window.jQuery ? jQuery('#membersSelectDetail') : null;
-            if ($select && $select.length) {
-                $select.select2({
-                    theme: 'bootstrap-5',
-                    placeholder: 'Search and select members...',
-                    width: '100%',
-                    templateResult: function (data) {
-                        if (!data.id) return data.text;
-                        const el = jQuery(data.element);
-                        const img = el.data('image-url');
-                        const name = el.data('real-name') || data.text;
-                        return jQuery(
-                            '<div class="member-option">'
-                            + (img ? '<img src="'+img+'" alt="avatar">' : '')
-                            + '<span class="name">'+ name +'</span>'
-                            + '</div>'
-                        );
-                    },
-                    templateSelection: function (data) {
-                        if (!data.id) return data.text;
-                        const el = jQuery(data.element);
-                        const img = el.data('image-url');
-                        const name = el.data('real-name') || data.text;
-                        return jQuery(
-                            '<div class="member-option">'
-                            + (img ? '<img src="'+img+'" alt="avatar">' : '')
-                            + '<span class="name">'+ name +'</span>'
-                            + '</div>'
-                        );
-                    },
-                    escapeMarkup: function(m) { return m; }
+        /*<![CDATA[*/
+        const checkInHistoryList = /*[[${checkInHistoryList}]]*/ [];
+        let currentIndex = 0;
+        
+        function navigateCheckIn(direction) {
+            if (checkInHistoryList.length === 0) return;
+            
+            currentIndex += direction;
+            
+            // Clamp index to valid range
+            if (currentIndex < 0) currentIndex = 0;
+            if (currentIndex >= checkInHistoryList.length) currentIndex = checkInHistoryList.length - 1;
+            
+            updateDisplay();
+        }
+        
+        function updateDisplay() {
+            if (checkInHistoryList.length === 0) return;
+            
+            const currentCheckIn = checkInHistoryList[currentIndex];
+            
+            // Update date display
+            const dateElement = document.querySelector('.date-display span');
+            if (dateElement && currentCheckIn.creationDate) {
+                const date = new Date(currentCheckIn.creationDate);
+                dateElement.textContent = date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
                 });
-
-                // Preselect existing members
-                const existing = /*[[${checkInForm.members}]]*/ [];
-                if (existing && existing.length) {
-                    $select.val(existing.map(m => m.id)).trigger('change');
-                }
             }
+            
+            // Update current index display
+            document.getElementById('currentIndex').textContent = currentIndex + 1;
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            document.getElementById('nextBtn').disabled = currentIndex === checkInHistoryList.length - 1;
+            
+            // Update content
+            const contentDiv = document.getElementById('checkInContent');
+            if (contentDiv && currentCheckIn.questions) {
+                // Sort questions by order
+                const sortedQuestions = [...currentCheckIn.questions].sort((a, b) => {
+                    const orderA = a.order || 0;
+                    const orderB = b.order || 0;
+                    return orderA - orderB;
+                });
+                
+                contentDiv.innerHTML = sortedQuestions.map((question, index) => {
+                    const answers = question.answer || [];
+                    let answerHtml = '';
+                    
+                    if (answers.length > 0) {
+                        answerHtml = answers.map(answer => {
+                            const answerText = escapeHtml(answer.text || '');
+                            const userHtml = answer.slackUser ? `
+                                <div class="answer-user">
+                                    <img src="${escapeHtml(answer.slackUser.profileImage32 || 'https://via.placeholder.com/32')}" 
+                                         alt="${escapeHtml(answer.slackUser.realName || '')}"
+                                         onerror="this.src='https://via.placeholder.com/32'">
+                                    <span class="answer-user-name">${escapeHtml(answer.slackUser.realName || '')}</span>
+                                </div>
+                            ` : '';
+                            
+                            return `
+                                <div class="answer-item">
+                                    <div class="answer-text">${answerText}</div>
+                                    ${userHtml}
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        answerHtml = `
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p class="mb-0">No answers</p>
+                            </div>
+                        `;
+                    }
+                    
+                    return `
+                        <div class="col-md-4 col-lg-3 mb-3">
+                            <div class="question-column">
+                                <div class="question-header">
+                                    <span>${question.order || (index + 1)}</span>. 
+                                    <span>${escapeHtml(question.text || '')}</span>
+                                </div>
+                                ${answerHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Sort questions by order on initial load
+        function sortQuestionsByOrder() {
+            const contentDiv = document.getElementById('checkInContent');
+            if (!contentDiv) return;
+            
+            const questionDivs = Array.from(contentDiv.children);
+            questionDivs.sort((a, b) => {
+                const orderA = parseInt(a.getAttribute('data-question-order') || '0');
+                const orderB = parseInt(b.getAttribute('data-question-order') || '0');
+                return orderA - orderB;
+            });
+            
+            // Re-append sorted elements
+            questionDivs.forEach(div => contentDiv.appendChild(div));
+        }
+        
+        // Initialize display on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            sortQuestionsByOrder();
+            updateDisplay();
         });
+        /*]]>*/
     </script>
 </body>
 </html>
