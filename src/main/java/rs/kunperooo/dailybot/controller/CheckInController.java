@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -135,6 +136,10 @@ public class CheckInController {
                 principal.getSubject(),
                 checkInForm.getQuestions() != null ? checkInForm.getQuestions().size() : 0);
 
+        Assert.notEmpty(checkInForm.getQuestions(), "Questions must not be empty");
+        Assert.notNull(checkInForm.getSchedule(), "Schedule is required");
+        Assert.notNull(checkInForm.getSchedule().getTime(), "Time is required");
+        Assert.notNull(checkInForm.getSchedule().getStartDate(), "Start date is required");
         try {
             checkInService.createCheckIn(
                     principal.getSubject(),
