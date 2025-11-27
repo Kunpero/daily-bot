@@ -28,6 +28,7 @@ import rs.kunperooo.dailybot.service.dto.SlackUserDto;
 import rs.kunperooo.dailybot.utils.SlackUserConverter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static rs.kunperooo.dailybot.utils.ActionId.FINISH_CHECK_IN;
@@ -41,6 +42,9 @@ public class SlackApiService {
 
     @Value("${slack.bot.token:}")
     private String slackBotToken;
+
+    @Value("${slack.app.users.read.page.size:100}")
+    private int usersReadPageSize;
 
     private final Slack slack;
     private final ActionResponseSender actionResponseSender;
@@ -193,22 +197,50 @@ public class SlackApiService {
         }
 
         MethodsClient methods = slack.methods(slackBotToken);
+        List<User> allUsers = new ArrayList<>();
+        String cursor = null;
 
         try {
-            UsersListResponse response = methods.usersList(req -> req
-                    .limit(1000)
-                    .includeLocale(true)
-            );
+            do {
+                UsersListResponse response;
+                if (cursor != null && !cursor.isEmpty()) {
+                    String finalCursor = cursor;
+                    response = methods.usersList(req -> req
+                            .limit(usersReadPageSize)
+                            .includeLocale(true)
+                            .cursor(finalCursor)
+                    );
+                } else {
+                    response = methods.usersList(req -> req
+                            .limit(usersReadPageSize)
+                            .includeLocale(true)
+                    );
+                }
 
-            if (!response.isOk()) {
-                log.error("Failed to retrieve users from Slack: {}", response.getError());
-                throw new RuntimeException("Failed to retrieve users: " + response.getError());
-            }
+                if (!response.isOk()) {
+                    log.error("Failed to retrieve users from Slack: {}", response.getError());
+                    throw new RuntimeException("Failed to retrieve users: " + response.getError());
+                }
 
-            List<User> users = response.getMembers();
-            log.info("Successfully retrieved {} users from Slack workspace", users.size());
+                List<User> users = response.getMembers();
+                if (users != null) {
+                    allUsers.addAll(users);
+                }
 
-            return users;
+                // Check if there's a next page
+                cursor = response.getResponseMetadata() != null 
+                        ? response.getResponseMetadata().getNextCursor() 
+                        : null;
+
+                log.debug("Retrieved {} users in this page. Total so far: {}. Has next page: {}", 
+                        users != null ? users.size() : 0, 
+                        allUsers.size(), 
+                        cursor != null && !cursor.isEmpty());
+
+            } while (cursor != null && !cursor.isEmpty());
+
+            log.info("Successfully retrieved {} users from Slack workspace", allUsers.size());
+            return allUsers;
 
         } catch (SlackApiException e) {
             log.error("Slack API error while retrieving users: {}", e.getMessage(), e);

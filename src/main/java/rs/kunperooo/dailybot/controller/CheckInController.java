@@ -24,9 +24,10 @@ import rs.kunperooo.dailybot.controller.dto.form.CheckInFormData;
 import rs.kunperooo.dailybot.controller.dto.form.SlackUserRest;
 import rs.kunperooo.dailybot.controller.dto.history.CheckInHistoryRest;
 import rs.kunperooo.dailybot.service.CheckInService;
-import rs.kunperooo.dailybot.service.SlackApiService;
+import rs.kunperooo.dailybot.service.cache.SlackUserCacheService;
 import rs.kunperooo.dailybot.utils.Converter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,7 +45,7 @@ import static rs.kunperooo.dailybot.utils.Converter.convertToQuestionListDto;
 public class CheckInController {
 
     private final CheckInService checkInService;
-    private final SlackApiService slackApiService;
+    private final SlackUserCacheService slackUserCacheService;
 
     @GetMapping
     public String listCheckIns(
@@ -103,7 +104,7 @@ public class CheckInController {
 
         CheckInFormData checkInForm = CheckInFormData.builder()
                 .build();
-        List<SlackUserRest> activeUsers = convertToListRest(slackApiService.getActiveUsers());
+        List<SlackUserRest> activeUsers = new ArrayList<>(convertToListRest(new ArrayList<>(slackUserCacheService.getAllUsers().values())));
 
         model.addAttribute("checkInForm", checkInForm);
         model.addAttribute("isEdit", false);
@@ -117,7 +118,7 @@ public class CheckInController {
 
         CheckInDataRest checkInForm = Converter.convertToRest(checkInService.findByUuid(uuid))
                 .orElseThrow(() -> new RuntimeException("Check-in not found with ID: " + uuid));
-        List<SlackUserRest> activeUsers = convertToListRest(slackApiService.getActiveUsers());
+        List<SlackUserRest> activeUsers = new ArrayList<>(convertToListRest(new ArrayList<>(slackUserCacheService.getAllUsers().values())));
 
         model.addAttribute("checkInForm", checkInForm);
         model.addAttribute("isEdit", true);
